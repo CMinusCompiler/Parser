@@ -4,7 +4,7 @@
 #include<vector>
 #include<set>
 using namespace std;
-#define FILENAME "wenfa.txt"
+#define FILENAME "test.txt"
 #define MAXROW 100
 #define EPSILON "ε"
 string var;//变元
@@ -13,25 +13,44 @@ map<string,int> ter_list;//终结符表
 map<int,string> re_var_list;//变元表
 map<int,string> re_ter_list;//终结符表
 map<string,int>::iterator it;
+class element;
+class editable_obj_set
+{
+public:
+	
+	string edi_str;
+	set<element> edi_elem_set;
+	editable_obj_set()
+	{
+	}
+	void edi_str_clear()
+	{
+		edi_str.clear();
+	}
+	void edi_elem_set_clear()
+	{
+		edi_elem_set.clear();
+	}
+
+}edi_obj_set;
 class element
 {
 public:
     bool isVar;
     int index;
-   /* string& toString() const
-    {
-		if(index<re_var_list.size()||index<re_ter_list.size())
-            return isVar?re_var_list[index]:re_ter_list[index];
-		else
-			return *(new string("null"));
-    }*/
+    
 	string& toString() const
     {
         //Judge whether the index is of meaning.
         if((isVar&&re_var_list.find(index)!=re_var_list.end())||(!isVar&&re_ter_list.find(index)!=re_ter_list.end()))
             return isVar?re_var_list[index]:re_ter_list[index];
         else
-            return *(new string("null"));
+		{
+			edi_obj_set.edi_str_clear();
+			edi_obj_set.edi_str=string("null");
+			return edi_obj_set.edi_str;
+		}
+		//else return *(new string("null");)
     }
 
     element(bool isVar,int index)
@@ -94,7 +113,7 @@ public:
     }
     string& toString()
     {
-        string* produc=new string();
+        /*string* produc=new string();
         (*produc)+=l_part.toString();
         (*produc)+=string("->");
         vector<element>::iterator it;
@@ -103,8 +122,20 @@ public:
             (*produc)+=it->toString();
             if(it!=r_part.end()-1)
                 (*produc)+=string(" ");
+        }*/
+		
+		edi_obj_set.edi_str_clear();
+		edi_obj_set.edi_str+=l_part.toString();
+        edi_obj_set.edi_str+=string("->");
+        vector<element>::iterator it;
+        for(it=r_part.begin();it<r_part.end();it++)
+        {
+            edi_obj_set.edi_str+=it->toString();
+            if(it!=r_part.end()-1)
+                edi_obj_set.edi_str+=string(" ");
         }
-        return *(produc);
+
+        return edi_obj_set.edi_str;
 
     }
 
@@ -159,17 +190,43 @@ public:
 
    set<element>& find(string x)
     {
+		/*
         set<element>* a=new set<element>;
-
          //Judge whether x exists in var_list or ter_list.
         if(var_list.find(x)==var_list.end()&&ter_list.find(x)==ter_list.end())
             return *a;
-
         //If x is a terminative, return {x}.
         if(ter_list.find(x)!=ter_list.end())
         {
             a->insert(element(0,ter_list.find(x)->second));
             return *a;
+        }
+        else
+        {
+            //FISRT(x) has not been established.
+            if(FIRST_map.find(x)==FIRST_map.end())
+            {
+                FIRST_map.insert(pair<string,int>(x,i_pointer));
+                //Establish a FIRST set with nothing.
+                FIRST_sets.push_back(set<element>());
+                i_pointer++;
+            }
+            map<string,int>::iterator it;
+            it=FIRST_map.find(x);
+            return FIRST_sets[it->second];
+        }
+		*/
+		edi_obj_set.edi_elem_set_clear();
+
+         //Judge whether x exists in var_list or ter_list.
+        if(var_list.find(x)==var_list.end()&&ter_list.find(x)==ter_list.end())
+            return edi_obj_set.edi_elem_set;
+
+        //If x is a terminative, return {x}.
+        if(ter_list.find(x)!=ter_list.end())
+        {
+            edi_obj_set.edi_elem_set.insert(element(0,ter_list.find(x)->second));
+            return edi_obj_set.edi_elem_set;
         }
         else
         {
@@ -187,11 +244,62 @@ public:
             return FIRST_sets[it->second];
         }
 
-
-
     }
 	
-	void print()
+   vector<string>& first_beita_a(vector<string>& beita_a)
+   { //求first(beita a),其中beita=（V|T）*，a属于T
+    //返回first集，vector中string均属于T
+	vector<string> first;
+	set<element>::iterator it;
+	vector<production>::iterator pro_it;
+	bool epsilon=false;
+	bool exist=false;
+	for(int i=0;i<beita_a.size();i++)
+	{
+		exist=false;
+		if(ter_list.find(beita_a[i])==ter_list.end())//beita_a[i]是变元
+		{		
+			for(it=first_sets.find(beita_a[i]).begin();it!=first_sets.find(beita_a[i]).end();it++)
+				if(it->toString().compare(EPSILON)!=0)
+				{
+					for(int j=0;j<first.size();j++)
+						if(first[j].compare(it->toString())==0)
+						{//已存在，不需加入
+							exist=true;
+							break;
+						}
+					if(!exist)
+			           first.push_back(it->toString());//将beita_a[i]的first集加入,不加入空,不重复加入
+				}
+			for(pro_it=produc_set.begin();pro_it<produc_set.end();pro_it++)
+			{//遍历产生式集合，看beita_a[i]是否能产生空
+				if(pro_it->l_part.toString().compare(beita_a[i])==0)//找到beita_a[i]的产生式
+				   if(pro_it->isWithEPSILON)
+				   {
+					   epsilon=true;
+					   break;
+				   }
+			}
+			if(!epsilon)//beita_a[i]不含空产生式
+				break;
+		}
+		else//beita_a[i]是终结符，加入first集，注意#也是终结符
+		{
+			for(int j=0;j<first.size();j++)
+				if(first[j].compare(beita_a[i])==0)
+				{//已存在，不需加入
+					exist=true;
+					break;
+				}
+			if(!exist)
+			    first.push_back(beita_a[i]);
+			break;
+		}
+	}
+	return first;
+    }
+	
+   void print()
 	{
 		set<element>::iterator set_it;
 		for(it=FIRST_map.begin();it!=FIRST_map.end();it++)
@@ -205,7 +313,7 @@ public:
 }first_sets;
 void split(std::string& s, std::string& delim,std::vector< std::string >* ret);
 void init_first_sets(map<string,int>& var_list);
-	
+
 void main()
 {
 	int i=1;
@@ -257,7 +365,6 @@ void main()
 	{
 		production product;
 		product.set_l_part(true,var_list.find(str.substr(0,pos-1))->second);
-		//ter_var=str.substr(pos+1,str.length()-pos-2);//产生式右部
 		ter_var=str.substr(pos+1,str.length()-pos-1);//产生式右部
 		split(ter_var,s,&var_ter_vec);
 		for(int j=0;j<var_ter_vec.size();j++)
@@ -281,6 +388,8 @@ void main()
 				product.insert_elem(element(true,(var_list.find(var_ter_vec[j]))->second));//产生式插入右部变元
 			}
 		}	
+		ter_list.insert(pair<string,int>("#",i));//最后#也插入终结符表				   
+		re_ter_list[i]="#";
 		produc_set.push_back(product);//构造produc_set
 	}    
 	}
@@ -319,7 +428,7 @@ void split(std::string& s, std::string& delim,std::vector< std::string >* ret)
 void init_first_sets(map<string,int>& var_list)
 {//求所有变元的first集
 	bool isChanged=false;
-	map<string,int>::iterator it;
+	map<string,int>::iterator it; 
 	set<element>::iterator set_it;
 
 	while(1)
@@ -365,3 +474,4 @@ void init_first_sets(map<string,int>& var_list)
 	}
 
 }
+ 
