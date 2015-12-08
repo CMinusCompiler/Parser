@@ -13,6 +13,7 @@ map<string,int> ter_list;//终结符表
 map<int,string> re_var_list;//变元表
 map<int,string> re_ter_list;//终结符表
 map<string,int>::iterator it;
+
 class element;
 class editable_obj_set
 {
@@ -222,6 +223,7 @@ public:
         if(var_list.find(x)==var_list.end()&&ter_list.find(x)==ter_list.end())
             return edi_obj_set.edi_elem_set;
 
+
         //If x is a terminative, return {x}.
         if(ter_list.find(x)!=ter_list.end())
         {
@@ -238,6 +240,7 @@ public:
                 FIRST_sets.push_back(set<element>());
                 i_pointer++;
             }
+
 
             map<string,int>::iterator it;
             it=FIRST_map.find(x);
@@ -310,9 +313,75 @@ public:
 			cout<<endl;
 		}
 	}
-}first_sets;
+}
+first_sets;
 void split(std::string& s, std::string& delim,std::vector< std::string >* ret);
 void init_first_sets(map<string,int>& var_list);
+
+
+/*
+class flex_production:public production
+{
+public:
+    int ptr_pos;
+    bool ptr_r_shift()
+    {
+		if(ptr_pos+1==production::r_part_size)
+			return false;
+		else
+			ptr_pos++;
+    }
+    flex_production(int ptr_pos,production& produc):production(produc)
+    {
+		this->ptr_pos=ptr_pos;
+	}
+	flex_production():production()
+	{
+		ptr_pos=-1;
+	}
+    flex_production(const flex_production& flex_produc):production(flex_produc)
+    {
+		this->ptr_pos=flex_produc.ptr_pos;
+    }
+	element& get_l_element()
+	{
+		if()
+		
+	}
+	element& get_r_element()
+	{
+	
+	}
+
+};
+class LR_item:public flex_production,public element
+{
+public:
+    LR_item()
+    {
+
+    }
+    LR_item(const LR_item& item)
+    {
+
+    }
+};
+class LR_item_closure
+{
+public:
+	set<LR_item> closure_instance;
+	int size;
+	void insert(LR_item& item)
+	{
+	}
+	LR_item_closure()
+	{}
+	LR_item_closure(const LR_item_closure& closure)
+	{}
+
+};
+
+*/
 
 void main()
 {
@@ -407,6 +476,8 @@ void main()
 		cout<<it->first<<"===="<<it->second<<endl;
 	}
 	*/
+	system("pause");
+
 }
 void split(std::string& s, std::string& delim,std::vector< std::string >* ret)  
 {  //将s按照delim划分存到ret中
