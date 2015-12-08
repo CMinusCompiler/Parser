@@ -13,25 +13,45 @@ map<string,int> ter_list;//终结符表
 map<int,string> re_var_list;//变元表
 map<int,string> re_ter_list;//终结符表
 map<string,int>::iterator it;
+
+class element;
+class editable_obj_set
+{
+public:
+	
+	string edi_str;
+	set<element> edi_elem_set;
+	editable_obj_set()
+	{
+	}
+	void edi_str_clear()
+	{
+		edi_str.clear();
+	}
+	void edi_elem_set_clear()
+	{
+		edi_elem_set.clear();
+	}
+
+}edi_obj_set;
 class element
 {
 public:
     bool isVar;
     int index;
-   /* string& toString() const
-    {
-		if(index<re_var_list.size()||index<re_ter_list.size())
-            return isVar?re_var_list[index]:re_ter_list[index];
-		else
-			return *(new string("null"));
-    }*/
+    
 	string& toString() const
     {
         //Judge whether the index is of meaning.
         if((isVar&&re_var_list.find(index)!=re_var_list.end())||(!isVar&&re_ter_list.find(index)!=re_ter_list.end()))
             return isVar?re_var_list[index]:re_ter_list[index];
         else
-            return *(new string("null"));
+		{
+			edi_obj_set.edi_str_clear();
+			edi_obj_set.edi_str=string("null");
+			return edi_obj_set.edi_str;
+		}
+		//else return *(new string("null");)
     }
 
     element(bool isVar,int index)
@@ -94,7 +114,7 @@ public:
     }
     string& toString()
     {
-        string* produc=new string();
+        /*string* produc=new string();
         (*produc)+=l_part.toString();
         (*produc)+=string("->");
         vector<element>::iterator it;
@@ -103,8 +123,20 @@ public:
             (*produc)+=it->toString();
             if(it!=r_part.end()-1)
                 (*produc)+=string(" ");
+        }*/
+		
+		edi_obj_set.edi_str_clear();
+		edi_obj_set.edi_str+=l_part.toString();
+        edi_obj_set.edi_str+=string("->");
+        vector<element>::iterator it;
+        for(it=r_part.begin();it<r_part.end();it++)
+        {
+            edi_obj_set.edi_str+=it->toString();
+            if(it!=r_part.end()-1)
+                edi_obj_set.edi_str+=string(" ");
         }
-        return *(produc);
+
+        return edi_obj_set.edi_str;
 
     }
 
@@ -159,6 +191,7 @@ public:
 
    set<element>& find(string x)
     {
+		/*
         set<element>* a=new set<element>;
 
          //Judge whether x exists in var_list or ter_list.
@@ -186,8 +219,34 @@ public:
             it=FIRST_map.find(x);
             return FIRST_sets[it->second];
         }
+		*/
+		edi_obj_set.edi_elem_set_clear();
 
+         //Judge whether x exists in var_list or ter_list.
+        if(var_list.find(x)==var_list.end()&&ter_list.find(x)==ter_list.end())
+            return edi_obj_set.edi_elem_set;
 
+        //If x is a terminative, return {x}.
+        if(ter_list.find(x)!=ter_list.end())
+        {
+            edi_obj_set.edi_elem_set.insert(element(0,ter_list.find(x)->second));
+            return edi_obj_set.edi_elem_set;
+        }
+        else
+        {
+            //FISRT(x) has not been established.
+            if(FIRST_map.find(x)==FIRST_map.end())
+            {
+                FIRST_map.insert(pair<string,int>(x,i_pointer));
+                //Establish a FIRST set with nothing.
+                FIRST_sets.push_back(set<element>());
+                i_pointer++;
+            }
+
+            map<string,int>::iterator it;
+            it=FIRST_map.find(x);
+            return FIRST_sets[it->second];
+        }
 
     }
 	
@@ -205,7 +264,70 @@ public:
 }first_sets;
 void split(std::string& s, std::string& delim,std::vector< std::string >* ret);
 void init_first_sets(map<string,int>& var_list);
+
+/*
+class flex_production:public production
+{
+public:
+    int ptr_pos;
+    bool ptr_r_shift()
+    {
+		if(ptr_pos+1==production::r_part_size)
+			return false;
+		else
+			ptr_pos++;
+    }
+    flex_production(int ptr_pos,production& produc):production(produc)
+    {
+		this->ptr_pos=ptr_pos;
+	}
+	flex_production():production()
+	{
+		ptr_pos=-1;
+	}
+    flex_production(const flex_production& flex_produc):production(flex_produc)
+    {
+		this->ptr_pos=flex_produc.ptr_pos;
+    }
+	element& get_l_element()
+	{
+		if()
+		
+	}
+	element& get_r_element()
+	{
 	
+	}
+
+};
+class LR_item:public flex_production,public element
+{
+public:
+    LR_item()
+    {
+
+    }
+    LR_item(const LR_item& item)
+    {
+
+    }
+};
+class LR_item_closure
+{
+public:
+	set<LR_item> closure_instance;
+	int size;
+	void insert(LR_item& item)
+	{
+	}
+	LR_item_closure()
+	{}
+	LR_item_closure(const LR_item_closure& closure)
+	{}
+
+};
+
+*/
 void main()
 {
 	int i=1;
@@ -298,6 +420,8 @@ void main()
 		cout<<it->first<<"===="<<it->second<<endl;
 	}
 	*/
+	system("pause");
+
 }
 void split(std::string& s, std::string& delim,std::vector< std::string >* ret)  
 {  //将s按照delim划分存到ret中
