@@ -63,6 +63,14 @@ public:
     {
         return this->index>elem.index;
     }
+	bool operator==(const element& elem)const
+    {
+        return this->index==elem.index;
+    }
+	bool operator!=(const element& elem)const
+    {
+        return this->index!=elem.index;
+    }
 	void clear()
 	{
 		index=-1;
@@ -137,8 +145,64 @@ public:
         return edi_str;
 
     }
+	bool operator<(const production& produc)const
+    {
+		if(l_part==l_part)
+		{
+			vector<element>::const_iterator it=r_part.begin();	
+			vector<element>::const_iterator _it=produc.r_part.begin();
+			for(;it<r_part.end()&&_it<produc.r_part.end();it++,_it++)
+				if((*it)!=(*_it))
+					return (*it)<(*it);
+			return false;
+		}
+		else
+			return l_part<produc.l_part;
+        
+    }
+    bool operator>(const production& produc)const
+    {
+		if(l_part==l_part)
+		{
+			vector<element>::const_iterator it=r_part.begin();	
+			vector<element>::const_iterator _it=produc.r_part.begin();
+			for(;it<r_part.end()&&_it<produc.r_part.end();it++,_it++)
+				if((*it)!=(*_it))
+					return (*it)>(*it);
+			return false;
+		}
+		else
+			return l_part>produc.l_part;
 
-
+    }
+	bool operator==(const production& produc)const
+	{
+		if(l_part==l_part)
+		{
+			vector<element>::const_iterator it=r_part.begin();	
+			vector<element>::const_iterator _it=produc.r_part.begin();
+			for(;it<r_part.end()&&_it<produc.r_part.end();it++,_it++)
+				if((*it)!=(*_it))
+					return false;
+			return true;
+		}
+		else
+			return false;
+	}
+	bool operator!=(const production& produc)const
+	{
+		if(l_part==l_part)
+		{
+			vector<element>::const_iterator it=r_part.begin();	
+			vector<element>::const_iterator _it=produc.r_part.begin();
+			for(;it<r_part.end()&&_it<produc.r_part.end();it++,_it++)
+				if((*it)!=(*_it))
+					return true;
+			return false;
+		}
+		else
+			return true;
+	}
 };
 
 set<element> edi_elem_set;
@@ -317,6 +381,42 @@ public:
 
 	}
 
+	bool operator>(const flex_production& produc)const
+	{
+		if((*this)==produc)
+		{
+			return this->ptr_pos>produc.ptr_pos;
+		}
+		else
+			return (*this)>produc;
+	}
+	bool operator<(const flex_production& produc)const
+	{
+		if((*this)==produc)
+		{
+			return this->ptr_pos<produc.ptr_pos;
+		}
+		else
+			return (*this)<produc;
+	}
+	bool operator==(const flex_production& produc)const
+	{
+		if((*this)==produc)
+		{
+			return this->ptr_pos==produc.ptr_pos;
+		}
+		else
+			return false;
+	}
+	bool operator!=(const flex_production& produc)const
+	{
+		if((*this)==produc)
+		{
+			return this->ptr_pos==produc.ptr_pos;
+		}
+		else
+			return true;
+	}
 };
 
 
@@ -329,7 +429,20 @@ public:
     {}
     LR_item(const LR_item& item):flex_production(item),element(item)
     {}
-	
+	bool operator<(const LR_item& produc)const
+	{
+		if(element::operator==(produc))
+			return flex_production::operator<(produc);
+		else
+			return element::operator<(produc);
+	}
+	bool operator>(const LR_item& produc)const
+	{
+		if(element::operator==(produc))
+			return flex_production::operator>(produc);
+		else
+			return element::operator>(produc);
+	}
 
 };
 
