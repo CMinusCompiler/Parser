@@ -3,8 +3,9 @@
 #include<map>
 #include<vector>
 #include<set>
+#include<list>
 using namespace std;
-#define FILENAME "test.txt"
+#define FILENAME "test2.txt"
 #define MAXROW 100
 #define EPSILON "ε"
 string var;//变元
@@ -249,7 +250,7 @@ public:
         }
 
     }
-	 vector<string>& find(vector<string>& beita_a)
+	 vector<string> find(vector<string>& beita_a)
    { //求first(beita a),其中beita=（V|T）*，a属于T
     //返回first集，vector中string均属于T
 	vector<string> first;
@@ -301,7 +302,7 @@ public:
 	}
 	return first;
     }
-   set<element>& find(vector<element>& beita_a)
+   set<element> find(vector<element>& beita_a)
    { //求first(beita a),其中beita=（V|T）*，a属于T
     //返回first集
 	set<element> first;
@@ -442,8 +443,12 @@ public:
 	
 	bool insert(const LR_item& item)
 	{
+		if(closure_instance.find(item)!=closure_instance.end())
+			return false;
+		
 		closure_instance.insert(item);
 		size++;
+		return true;
 	}
 	LR_item_closure()
 	{
@@ -466,8 +471,10 @@ public:
 			isChanged=false;
 			for(it=closure_instance.begin();it!=closure_instance.end();it++)
 			{
-				element B=it->get_r_element;
-				if(B.isNull)//the dot isn't at the rightest
+				LR_item not_const_it=LR_item(*it);
+				element B=not_const_it.get_r_element();
+				//element B=it->get_r_element();
+				if(!B.isNull)//the dot isn't at the rightest
 				{		
 					if(B.isVar)//the right of the dot is a V    ;A->a.B……
 					{
@@ -479,10 +486,10 @@ public:
 								for(int j=it->ptr_pos+2;j<it->r_part_size;j++)//A->a.Bbeita,a, put beita to vector<element> beita_a
 									beita_a.push_back(element(it->r_part[j].isVar,it->r_part[j].index));
 								beita_a.push_back(element(false,it->index));//A->a.Bbeita,a, put a to vector<element> beita_a
-								set<element> first_beita_a=first_sets.find(beita_a);
+								set<element>  first_beita_a=first_sets.find(beita_a);
 								set<element>::iterator first_it;
 								for(first_it=first_beita_a.begin();first_it!=first_beita_a.end();first_it++)//first(beita_a)
-									isChanged=insert(LR_item(-1,produc_set[i],false,first_it->index));
+									isChanged|=insert(LR_item(-1,produc_set[i],false,first_it->index));
 							}
 						}
 					}
@@ -494,10 +501,99 @@ public:
 	}
 };
 int LR_item_closure::index_generator=0;
+class LR1FA_node:LR_item_closure
+{
+private:
+	//Used to describe the element on the transmition arrow.
+	//Should not be in the FA_vertex_node, so "private" is confined.
+	element trans_condition;
 
+public:
+	
+	LR1FA_node():LR_item_closure()
+	{
+	}
+	LR1FA_node(const LR1FA_node& node):LR_item_closure(node)
+	{
+		trans_condition=element(node.trans_condition);
+	}
+	void set_trans_condition(element& elem)
+	{
+		trans_condition=element(elem);
+	}
+	void set_trans_condition(bool isVar,int index)
+	{
+		trans_condition.isVar=isVar;
+		trans_condition.index=index;
+	}
+	element& get_trans_condition()
+	{
+		return trans_condition;
+	}
 
+};
 
+class LR1FA_vertex_node:LR1FA_node
+{
+public:
+	list<LR1FA_node> adj_list;
+	int adj_list_length;
+	LR1FA_vertex_node():LR1FA_node()
+	{
+		adj_list_length=0;
+	}
+	LR1FA_vertex_node(const LR1FA_vertex_node& node):LR1FA_node(node)
+	{
+		list<LR1FA_node>::const_iterator it;
+		for(it=node.adj_list.begin();it!=node.adj_list.end();it++)
+		{
+			push_back(*it);
+		}
+		adj_list_length=node.adj_list_length;
+	}
+	void push_back(const LR1FA_node& node)
+	{
+		adj_list.push_back(node);
+		adj_list_length++;
+	}
 
+};
+class LR1FA_graph
+{
+public:
+	int vertex_node_num;
+	vector<LR1FA_vertex_node> adj_list_array;
+	LR1FA_graph()
+	{
+		vertex_node_num=0;
+	}
+	LR1FA_graph(const LR1FA_graph& graph)
+	{
+		vector<LR1FA_vertex_node>::const_iterator it;
+		for(it=graph.adj_list_array.begin();it<graph.adj_list_array.end();it++)
+		{
+			push_back(*it);
+		}
+	}
+	void push_back(const LR1FA_vertex_node& node)
+	{
+		adj_list_array.push_back(node);
+		vertex_node_num++;
+	}
+	LR1FA_vertex_node& operator[](int index)
+	{
+		return adj_list_array[index];
+	}
+	void BFS(void (*f)())
+	{
+
+	}
+private:
+	void BFS_visit(void (*f)())
+	{
+		
+	}
+};
 
 /*
 class flex_production:public production
@@ -605,46 +701,50 @@ void main()
 	i=1;
 	while(!feof(f))
 	{
-	fgets(cstr,MAXROW,f);
-	str=cstr;
-	if(str[str.length()-1]=='\n')
-		str.resize(str.size()-1);
-	pos=str.find('→');
-	if(pos>0)
-	{
-		production product;
-		product.set_l_part(true,var_list.find(str.substr(0,pos-1))->second);
-		ter_var=str.substr(pos+1,str.length()-pos-1);//产生式右部
-		split(ter_var,s,&var_ter_vec);
-		for(int j=0;j<var_ter_vec.size();j++)
+		fgets(cstr,MAXROW,f);
+		str=cstr;
+		if(str[str.length()-1]=='\n')
+			str.resize(str.size()-1);
+		pos=str.find('→');
+		if(pos>0)
 		{
-			if((var_list.find(var_ter_vec[j]))==var_list.end())//不是变元，即为终结符
+			production product;
+			product.set_l_part(true,var_list.find(str.substr(0,pos-1))->second);
+			ter_var=str.substr(pos+1,str.length()-pos-1);//产生式右部
+			split(ter_var,s,&var_ter_vec);
+			for(int j=0;j<var_ter_vec.size();j++)
 			{
-
-				if(ter_list.find(var_ter_vec[j])==ter_list.end())
+				if((var_list.find(var_ter_vec[j]))==var_list.end())//不是变元，即为终结符
 				{
-				   product.insert_elem(element(false,i));//产生式插入右部终结符
-				   ter_list.insert(pair<string,int>(var_ter_vec[j],i));//插入终结符表				   
-				   re_ter_list[i]=var_ter_vec[j];//re_ter_list.insert(pair<int,string>(i,var_ter_vec[j]));
-				   i++;
+
+					if(ter_list.find(var_ter_vec[j])==ter_list.end())
+					{
+					   product.insert_elem(element(false,i));//产生式插入右部终结符
+					   ter_list.insert(pair<string,int>(var_ter_vec[j],i));//插入终结符表				   
+					   re_ter_list[i]=var_ter_vec[j];//re_ter_list.insert(pair<int,string>(i,var_ter_vec[j]));
+					   i++;
+					}
+					else
+						product.insert_elem(element(false,ter_list.find(var_ter_vec[j])->second));//产生式插入右部终结符
 				}
-				else
-					product.insert_elem(element(false,ter_list.find(var_ter_vec[j])->second));//产生式插入右部终结符
-			}
-			else//变元
-			{
-				
-				product.insert_elem(element(true,(var_list.find(var_ter_vec[j]))->second));//产生式插入右部变元
-			}
-		}	
-		ter_list.insert(pair<string,int>("#",i));//最后#也插入终结符表				   
-		re_ter_list[i]="#";
-		produc_set.push_back(product);//构造produc_set
-	}    
+				else//变元
+				{	
+					product.insert_elem(element(true,(var_list.find(var_ter_vec[j]))->second));//产生式插入右部变元
+				}
+			}	
+			produc_set.push_back(product);//构造produc_set
+		}    
 	}
+	ter_list.insert(pair<string,int>("#",i));//最后#也插入终结符表				   
+    re_ter_list[i]="#";
+
 	fclose(f);
 	init_first_sets(var_list);
 	first_sets.print();
+
+	LR_item_closure test;
+	test.insert(LR_item(-1,produc_set[1],0,3));
+	test.closure_completion();
 
 	/*vector<string> a;
 	a.push_back("E'");
@@ -716,16 +816,19 @@ void init_first_sets(map<string,int>& var_list)
 								for(set_it=first_yk.begin();set_it!=first_yk.end();set_it++)//将first(Yk)中所有非空元素加入first(X)
 									if((*set_it).toString().compare(EPSILON)!=0)	
 										isChanged|=first_sets.insert(it->first,*set_it);
-								if(first_sets.find(produc_set[i].r_part[k].toString()).find(element(false,ter_list.find(EPSILON)->second))!=(first_sets.find(produc_set[i].r_part[k].toString())).end())
-								{//如果first(Yk)有空
-									if(k==produc_set[i].r_part.size()-1)
-									{									
-										isChanged|=first_sets.insert(it->first,element(false,ter_list.find(EPSILON)->second));//插入空
-										break;
+								if(ter_list.find(EPSILON)!=ter_list.end())
+								{
+									if(first_sets.find(produc_set[i].r_part[k].toString()).find(element(false,ter_list.find(EPSILON)->second))!=(first_sets.find(produc_set[i].r_part[k].toString())).end())
+									{//如果first(Yk)有空
+										if(k==produc_set[i].r_part.size()-1)
+										{									
+											isChanged|=first_sets.insert(it->first,element(false,ter_list.find(EPSILON)->second));//插入空
+											break;
+										}
 									}
+									else
+										break;
 								}
-								else
-									break;
 							}
 							
 						}
