@@ -191,17 +191,7 @@ public:
 	}
 	bool operator!=(const production& produc)const
 	{
-		if(l_part==l_part)
-		{
-			vector<element>::const_iterator it=r_part.begin();	
-			vector<element>::const_iterator _it=produc.r_part.begin();
-			for(;it<r_part.end()&&_it<produc.r_part.end();it++,_it++)
-				if((*it)!=(*_it))
-					return true;
-			return false;
-		}
-		else
-			return true;
+		return !((*this)==produc);
 	}
 };
 
@@ -406,12 +396,29 @@ public:
 	}
 	bool operator!=(const flex_production& produc)const
 	{
-		if(production::operator==(produc))
-		{
-			return this->ptr_pos==produc.ptr_pos;
-		}
-		else
-			return true;
+		return !((*this)==produc);
+	}
+
+	string& toString()
+	{
+		edi_str.clear();
+		edi_str+=l_part.toString();
+        edi_str+=string("->");
+        
+		//¡¤
+		
+        for(int i=-1;i<r_part.size();i++)
+        {
+			if(i!=ptr_pos)
+				edi_str+=r_part[i].toString();
+            if(i!=r_part.size()-1&&i!=ptr_pos)
+                edi_str+=string(" ");
+			if(i==ptr_pos)
+				edi_str+="¡¤ ";
+			
+        }
+
+        return edi_str;
 	}
 };
 
@@ -457,6 +464,17 @@ public:
 		else
 			return element::operator>(produc);
 	}
+	bool operator==(const LR_item& produc)const
+	{
+		if(element::operator==(produc))
+			return flex_production::operator==(produc);
+		else
+			return false;
+	}
+	bool operator!=(const LR_item& produc)const
+	{
+		return !((*this)==produc);
+	}
 
 	string& toString()
 	{
@@ -466,6 +484,7 @@ public:
 		edi_str+=" , ";
 		edi_str+=element::toString();
 		edi_str+="]";
+		return edi_str;
 	}
 
 }edi_LR_item;
@@ -475,9 +494,6 @@ public:
 //LR_item closure for LR(1)
 class LR_item_closure
 {
-private:
-	
-	
 public:
 	set<LR_item> closure_instance;
 	int size;
@@ -512,6 +528,28 @@ public:
 		closure_instance.clear();
 		size=0;
 	}
+	bool operator<(const LR_item_closure& closure)const
+	{
+		set<LR_item>::iterator it=this->closure_instance.begin();
+		set<LR_item>::iterator _it=closure.closure_instance.begin();
+		for(;it!=this->closure_instance.end()&&_it!=closure.closure_instance.end();it++,_it++)
+			if((*it)!=(*_it))
+				return (*it)<(*_it);
+		return false;
+		
+		
+	}
+	bool operator>(const LR_item_closure& closure)const
+	{
+		set<LR_item>::iterator it=this->closure_instance.begin();
+		set<LR_item>::iterator _it=closure.closure_instance.begin();
+		for(;it!=this->closure_instance.end()&&_it!=closure.closure_instance.end();it++,_it++)
+			if((*it)!=(*_it))
+				return (*it)>(*_it);
+		return false;
+		
+	}
+
 }edi_closure;
 
 
