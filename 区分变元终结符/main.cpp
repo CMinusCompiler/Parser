@@ -332,9 +332,13 @@ public:
 //LR_item closure for LR(1)
 class LR_item_closure
 {
+protected:
+	static int index_generator;
 public:
 	set<LR_item> closure_instance;
 	int size;
+	int index;
+	
 	void insert(const LR_item& item)
 	{
 		closure_instance.insert(item);
@@ -343,17 +347,18 @@ public:
 	LR_item_closure()
 	{
 		size=0;
+		index=index_generator;
+		index_generator++;
 	}
 	LR_item_closure(const LR_item_closure& closure)
 	{
 		set<LR_item>::const_iterator it;
 		for(it=closure.closure_instance.begin();it!=closure.closure_instance.end();it++)
 			insert((*it));
-
 	}
 
 };
-
+int LR_item_closure::index_generator=0;
 
 void main()
 {
