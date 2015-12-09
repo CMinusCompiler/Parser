@@ -343,17 +343,19 @@ public:
 	set<LR_item> closure_instance;
 	int size;
 	
-	
 	//Return: successfully done or not.
 	bool insert(const LR_item& item)
 	{
-		if(closure_instance.find(item)==closure_instance.end())
+		if(closure_instance.find(item)!=closure_instance.end())
 			return false;
 		
 		closure_instance.insert(item);
 		size++;
 		return true;
 	}
+
+	
+	
 	LR_item_closure()
 	{
 		size=0;
