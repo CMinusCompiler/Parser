@@ -4,7 +4,7 @@
 #include<vector>
 #include<set>
 using namespace std;
-#define FILENAME "test.txt"
+#define FILENAME "wenfa.txt"
 #define MAXROW 100
 #define EPSILON "¦Å"
 string var;//±äÔª
