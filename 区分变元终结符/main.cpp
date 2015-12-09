@@ -3,6 +3,7 @@
 #include<map>
 #include<vector>
 #include<set>
+#include<list>
 using namespace std;
 #define FILENAME "wenfa.txt"
 #define MAXROW 100
@@ -339,10 +340,15 @@ public:
 	int size;
 	int index;
 	
-	void insert(const LR_item& item)
+	//Return: successfully done or not.
+	bool insert(const LR_item& item)
 	{
+		if(closure_instance.find(item)==closure_instance.end())
+			return false;
+		
 		closure_instance.insert(item);
 		size++;
+		return true;
 	}
 	LR_item_closure()
 	{
@@ -359,6 +365,102 @@ public:
 
 };
 int LR_item_closure::index_generator=0;
+
+class LR1FA_node:LR_item_closure
+{
+private:
+	//Used to describe the element on the transmition arrow.
+	//Should not be in the FA_vertex_node, so "private" is confined.
+	element trans_condition;
+
+public:
+	
+	LR1FA_node():LR_item_closure()
+	{
+	}
+	LR1FA_node(const LR1FA_node& node):LR_item_closure(node)
+	{
+		trans_condition=element(node.trans_condition);
+	}
+	void set_trans_condition(element& elem)
+	{
+		trans_condition=element(elem);
+	}
+	void set_trans_condition(bool isVar,int index)
+	{
+		trans_condition.isVar=isVar;
+		trans_condition.index=index;
+	}
+	element& get_trans_condition()
+	{
+		return trans_condition;
+	}
+
+};
+
+class LR1FA_vertex_node:LR1FA_node
+{
+public:
+	list<LR1FA_node> adj_list;
+	int adj_list_length;
+	LR1FA_vertex_node():LR1FA_node()
+	{
+		adj_list_length=0;
+	}
+	LR1FA_vertex_node(const LR1FA_vertex_node& node):LR1FA_node(node)
+	{
+		list<LR1FA_node>::const_iterator it;
+		for(it=node.adj_list.begin();it!=node.adj_list.end();it++)
+		{
+			push_back(*it);
+		}
+		adj_list_length=node.adj_list_length;
+	}
+	void push_back(const LR1FA_node& node)
+	{
+		adj_list.push_back(node);
+		adj_list_length++;
+	}
+
+};
+class LR1FA_graph
+{
+public:
+	int vertex_node_num;
+	vector<LR1FA_vertex_node> adj_list_array;
+	LR1FA_graph()
+	{
+		vertex_node_num=0;
+	}
+	LR1FA_graph(const LR1FA_graph& graph)
+	{
+		vector<LR1FA_vertex_node>::const_iterator it;
+		for(it=graph.adj_list_array.begin();it<graph.adj_list_array.end();it++)
+		{
+			push_back(*it);
+		}
+	}
+	void push_back(const LR1FA_vertex_node& node)
+	{
+		adj_list_array.push_back(node);
+		vertex_node_num++;
+	}
+	LR1FA_vertex_node& operator[](int index)
+	{
+		return adj_list_array[index];
+	}
+	void BFS(void (*f)())
+	{
+
+	}
+private:
+	void BFS_visit(void (*f)())
+	{
+		
+	}
+};
+
+
 
 void main()
 {
