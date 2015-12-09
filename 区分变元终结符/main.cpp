@@ -14,32 +14,14 @@ map<int,string> re_var_list;//变元表
 map<int,string> re_ter_list;//终结符表
 map<string,int>::iterator it;
 
-class element;
-class editable_obj_set
-{
-public:
-	
-	string edi_str;
-	set<element> edi_elem_set;
-	editable_obj_set()
-	{
-	}
-	void edi_str_clear()
-	{
-		edi_str.clear();
-	}
-	void edi_elem_set_clear()
-	{
-		edi_elem_set.clear();
-	}
+string edi_str;
 
-}edi_obj_set;
 class element
 {
 public:
     bool isVar;
     int index;
-    
+    bool isNull;
 	string& toString() const
     {
         //Judge whether the index is of meaning.
@@ -47,9 +29,9 @@ public:
             return isVar?re_var_list[index]:re_ter_list[index];
         else
 		{
-			edi_obj_set.edi_str_clear();
-			edi_obj_set.edi_str=string("null");
-			return edi_obj_set.edi_str;
+			edi_str.clear();
+			edi_str=string("null");
+			return edi_str;
 		}
 		//else return *(new string("null");)
     }
@@ -58,14 +40,19 @@ public:
     {
         this->isVar=isVar;
         this->index=index;
+		this->isNull=false;
     }
     element(const element& elem)
     {
         isVar=elem.isVar;
         index=elem.index;
+		isNull=elem.isNull;
     }
     element()
-    {}
+    {
+		index=-1;
+		isNull=true;
+	}
     bool operator<(const element& elem)const
     {
         return this->index<elem.index;
@@ -74,7 +61,16 @@ public:
     {
         return this->index>elem.index;
     }
+	void clear()
+	{
+		index=-1;
+		isNull=true;
+	}
+	
+	
 };
+
+element edi_elem;
 
 class production
 {
@@ -125,23 +121,26 @@ public:
                 (*produc)+=string(" ");
         }*/
 		
-		edi_obj_set.edi_str_clear();
-		edi_obj_set.edi_str+=l_part.toString();
-        edi_obj_set.edi_str+=string("->");
+		edi_str.clear();
+		edi_str+=l_part.toString();
+        edi_str+=string("->");
         vector<element>::iterator it;
         for(it=r_part.begin();it<r_part.end();it++)
         {
-            edi_obj_set.edi_str+=it->toString();
+            edi_str+=it->toString();
             if(it!=r_part.end()-1)
-                edi_obj_set.edi_str+=string(" ");
+                edi_str+=string(" ");
         }
 
-        return edi_obj_set.edi_str;
+        return edi_str;
 
     }
 
 
 };
+
+set<element> edi_elem_set;
+
 vector<production> produc_set;//产生式集合
 class FIRST
 {
@@ -189,6 +188,8 @@ public:
 
     }
 
+
+
    set<element>& find(string x)
     {
 		/*
@@ -220,17 +221,17 @@ public:
             return FIRST_sets[it->second];
         }
 		*/
-		edi_obj_set.edi_elem_set_clear();
+		edi_elem_set.clear();
 
          //Judge whether x exists in var_list or ter_list.
         if(var_list.find(x)==var_list.end()&&ter_list.find(x)==ter_list.end())
-            return edi_obj_set.edi_elem_set;
+            return edi_elem_set;
 
         //If x is a terminative, return {x}.
         if(ter_list.find(x)!=ter_list.end())
         {
-            edi_obj_set.edi_elem_set.insert(element(0,ter_list.find(x)->second));
-            return edi_obj_set.edi_elem_set;
+            edi_elem_set.insert(element(0,ter_list.find(x)->second));
+            return edi_elem_set;
         }
         else
         {
@@ -265,14 +266,15 @@ public:
 void split(std::string& s, std::string& delim,std::vector< std::string >* ret);
 void init_first_sets(map<string,int>& var_list);
 
-/*
+
 class flex_production:public production
 {
 public:
+	//ptr_pos:giving the dot position(e.g.:A->a . b c, ptr_pos is 0)
     int ptr_pos;
     bool ptr_r_shift()
     {
-		if(ptr_pos+1==production::r_part_size)
+		if(ptr_pos==production::r_part_size-1)
 			return false;
 		else
 			ptr_pos++;
@@ -291,43 +293,68 @@ public:
     }
 	element& get_l_element()
 	{
-		if()
-		
+		//If the dot is at the leftest side, return a null element.
+		if(ptr_pos==-1)
+		{
+			edi_elem.clear();
+			return edi_elem;
+		}
+		else
+			return production::r_part[ptr_pos];
 	}
 	element& get_r_element()
 	{
-	
+		//If the dot is at the rightest side, return a null element.
+		if(ptr_pos==production::r_part_size-1)
+		{
+			edi_elem.clear();
+			return edi_elem;
+		}
+		else 
+			return production::r_part[ptr_pos+1];
+
 	}
 
 };
+
+
 class LR_item:public flex_production,public element
 {
 public:
-    LR_item()
-    {
-
-    }
-    LR_item(const LR_item& item)
-    {
-
-    }
+    LR_item():flex_production(),element()
+    {}
+	LR_item(int ptr_pos,production& produc,bool isVar,int index):flex_production(ptr_pos,produc),element(isVar,index)
+    {}
+    LR_item(const LR_item& item):flex_production(item),element(item)
+    {}
 };
+
+
 class LR_item_closure
 {
 public:
 	set<LR_item> closure_instance;
 	int size;
-	void insert(LR_item& item)
+	void insert(const LR_item& item)
 	{
+		closure_instance.insert(item);
+		size++;
 	}
 	LR_item_closure()
-	{}
+	{
+		size=0;
+	}
 	LR_item_closure(const LR_item_closure& closure)
-	{}
+	{
+		set<LR_item>::const_iterator it;
+		for(it=closure.closure_instance.begin();it<closure.closure_instance.end();it++)
+			insert((*it));
+
+	}
 
 };
 
-*/
+
 void main()
 {
 	int i=1;
