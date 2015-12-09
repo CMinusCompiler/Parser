@@ -153,7 +153,7 @@ public:
 			vector<element>::const_iterator _it=produc.r_part.begin();
 			for(;it<r_part.end()&&_it<produc.r_part.end();it++,_it++)
 				if((*it)!=(*_it))
-					return (*it)<(*it);
+					return (*it)<(*_it);
 			return false;
 		}
 		else
@@ -168,7 +168,7 @@ public:
 			vector<element>::const_iterator _it=produc.r_part.begin();
 			for(;it<r_part.end()&&_it<produc.r_part.end();it++,_it++)
 				if((*it)!=(*_it))
-					return (*it)>(*it);
+					return (*it)>(*_it);
 			return false;
 		}
 		else
