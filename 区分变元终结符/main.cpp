@@ -383,25 +383,25 @@ public:
 
 	bool operator>(const flex_production& produc)const
 	{
-		if((*this)==produc)
+		if(production::operator==(produc))
 		{
 			return this->ptr_pos>produc.ptr_pos;
 		}
 		else
-			return (*this)>produc;
+			return production::operator>(produc);
 	}
 	bool operator<(const flex_production& produc)const
 	{
-		if((*this)==produc)
+		if(production::operator==(produc))
 		{
 			return this->ptr_pos<produc.ptr_pos;
 		}
 		else
-			return (*this)<produc;
+			return production::operator<(produc);
 	}
 	bool operator==(const flex_production& produc)const
 	{
-		if((*this)==produc)
+		if(production::operator==(produc))
 		{
 			return this->ptr_pos==produc.ptr_pos;
 		}
@@ -410,7 +410,7 @@ public:
 	}
 	bool operator!=(const flex_production& produc)const
 	{
-		if((*this)==produc)
+		if(production::operator==(produc))
 		{
 			return this->ptr_pos==produc.ptr_pos;
 		}
