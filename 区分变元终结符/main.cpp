@@ -450,8 +450,8 @@ public:
 class LR_item_closure
 {
 private:
-	static int index_generator;
-	int index;
+	
+	
 public:
 	set<LR_item> closure_instance;
 	int size;
@@ -472,8 +472,6 @@ public:
 	LR_item_closure()
 	{
 		size=0;
-		index=index_generator;
-		index_generator++;
 	}
 	LR_item_closure(const LR_item_closure& closure)
 	{
@@ -481,12 +479,17 @@ public:
 		for(it=closure.closure_instance.begin();it!=closure.closure_instance.end();it++)
 			insert((*it));
 	}
-	int get_index()
+	
+
+	void clear()
 	{
-		return index;
+		closure_instance.clear();
+		size=0;
 	}
 };
-int LR_item_closure::index_generator=0;
+
+
+LR_item_closure edi_closure;
 
 class LR1FA_node:public LR_item_closure
 {
@@ -613,15 +616,15 @@ public:
 		return adj_list_array[index];
 	}
 	
-	void BFS(void (*operation)(LR1FA_graph& graph,const LR1FA_node& node),LR1FA_graph& graph)
+	void BFS(void (*operation)(LR1FA_graph& graph,const LR1FA_node& node))
 	{
 		queue<LR1FA_vertex_node> visit_queue;
-		visit_queue.push(graph[0]);
+		visit_queue.push((*this)[0]);
 
 		while(!visit_queue.empty())
 		{
 			//Visit the node.
-			operation(graph,visit_queue.front());
+			operation(*this,visit_queue.front());
 			
 
 			//Push the adjacent nodes.
