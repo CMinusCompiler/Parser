@@ -78,9 +78,9 @@ public:
 	}
 	
 	
-};
+}edi_elem;
 
-element edi_elem;
+
 
 class production
 {
@@ -427,16 +427,18 @@ public:
     {}
 
 
-	//Return: a new flex_production object(with dot shifted right)
+	//Return: a flex_production reference object(with dot shifted right)
     LR_item& ptr_r_shift()
     {
-		LR_item* p_item=new LR_item(*this);
+
+		edi_LR_item.clear();
+		
 		if(ptr_pos==production::r_part_size-1)
-			return *p_item;
+			return edi_LR_item;
 		else
 		{
-			p_item->ptr_pos++;
-			return *p_item;
+			edi_LR_item.ptr_pos++;
+			return edi_LR_item;
 		}
     }
 
@@ -456,7 +458,19 @@ public:
 			return element::operator>(produc);
 	}
 
-};
+	string& toString()
+	{
+		edi_str.clear();
+		edi_str+="[";
+		edi_str+=flex_production::toString();
+		edi_str+=" , ";
+		edi_str+=element::toString();
+		edi_str+="]";
+	}
+
+}edi_LR_item;
+
+
 
 //LR_item closure for LR(1)
 class LR_item_closure
@@ -498,10 +512,10 @@ public:
 		closure_instance.clear();
 		size=0;
 	}
-};
+}edi_closure;
 
 
-LR_item_closure edi_closure;
+
 
 class LR1FA_node:public LR_item_closure
 {
