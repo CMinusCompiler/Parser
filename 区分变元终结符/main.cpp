@@ -329,7 +329,7 @@ public:
     {}
 };
 
-
+//LR_item closure for LR(1)
 class LR_item_closure
 {
 public:
