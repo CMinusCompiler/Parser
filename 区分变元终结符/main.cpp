@@ -80,9 +80,9 @@ public:
 	}
 	
 	
-};
+}edi_elem;
 
-element edi_elem;
+
 
 class production
 {
@@ -433,20 +433,13 @@ public:
 }first_sets;
 void split(std::string& s, std::string& delim,std::vector< std::string >* ret);
 void init_first_sets(map<string,int>& var_list);
-
+void set_C_construction();
 
 class flex_production:public production
 {
 public:
 	//ptr_pos:giving the dot position(e.g.:A->a . b c, ptr_pos is 0)
     int ptr_pos;
-    bool ptr_r_shift()
-    {
-		if(ptr_pos==production::r_part_size-1)
-			return false;
-		else
-			ptr_pos++;
-    }
     flex_production(int ptr_pos,production& produc):production(produc)
     {
 		this->ptr_pos=ptr_pos;
@@ -546,18 +539,41 @@ public:
 		else
 			return element::operator>(produc);
 	}
-};
+   //Return: a flex_production reference object(with dot shifted right)
+    LR_item& ptr_r_shift()
+    {
+
+		edi_LR_item.clear();
+		
+		if(ptr_pos==production::r_part_size-1)
+			return edi_LR_item;
+		else
+		{
+			edi_LR_item.ptr_pos++;
+			return edi_LR_item;
+		}
+    }
+	string& toString()
+	{
+		edi_str.clear();
+		edi_str+="[";
+		edi_str+=flex_production::toString();
+		edi_str+=" , ";
+		edi_str+=element::toString();
+		edi_str+="]";
+		return edi_str;
+	}
+}edi_LR_item;
 
 //LR_item closure for LR(1)
 class LR_item_closure
 {
-protected:
-	static int index_generator;
+
 public:
 	set<LR_item> closure_instance;
 	int size;
-	int index;
 	
+	//Return: successfully done or not.
 	bool insert(const LR_item& item)
 	{
 		if(closure_instance.find(item)!=closure_instance.end())
@@ -567,17 +583,25 @@ public:
 		size++;
 		return true;
 	}
+
+	
+	
 	LR_item_closure()
 	{
 		size=0;
-		index=index_generator;
-		index_generator++;
 	}
 	LR_item_closure(const LR_item_closure& closure)
 	{
 		set<LR_item>::const_iterator it;
 		for(it=closure.closure_instance.begin();it!=closure.closure_instance.end();it++)
 			insert((*it));
+	}
+	
+
+	void clear()
+	{
+		closure_instance.clear();
+		size=0;
 	}
 	void closure_completion()
 	{//  closure_instance=CLOSURE£¨closure_instance£©
@@ -616,8 +640,9 @@ public:
 				break;
 		}		
 	}
-};
-int LR_item_closure::index_generator=0;
+}edi_closure;
+
+
 class LR1FA_node:public LR_item_closure
 {
 private:
@@ -743,15 +768,15 @@ public:
 		return adj_list_array[index];
 	}
 	
-	void BFS(void (*operation)(LR1FA_graph& graph,const LR1FA_node& node),LR1FA_graph& graph)
+	void BFS(void (*operation)(LR1FA_graph& graph,const LR1FA_node& node))
 	{
 		queue<LR1FA_vertex_node> visit_queue;
-		visit_queue.push(graph[0]);
+		visit_queue.push((*this)[0]);
 
 		while(!visit_queue.empty())
 		{
 			//Visit the node.
-			operation(graph,visit_queue.front());
+			operation(*this,visit_queue.front());
 			
 
 			//Push the adjacent nodes.
@@ -766,6 +791,7 @@ public:
 
 
 	}
+
 
 };
 /*
@@ -853,6 +879,9 @@ void main()
 	fgets(cstr,MAXROW,f);
 	str=cstr;
 	pos=str.find('¡ú');
+	var_list.insert(pair<string,int>("S'",i));//first insert S' into var_list
+    re_var_list.insert(pair<int,string>(i,"S'"));
+	i++;
 	if(pos>0)
 	{
 		var=str.substr(0,pos-1);
@@ -913,12 +942,21 @@ void main()
 
 	fclose(f);
 	init_first_sets(var_list);
-	first_sets.print();
-   /*test LR_item_closure::closure_completion
+	//first_sets.print();
+	set_C_construction();
+
+
+
+   /* //test LR_item_closure::closure_completion
 	LR_item_closure test;
 	test.insert(LR_item(-1,produc_set[1],0,3));
 	test.closure_completion();
-	*/
+	set<LR_item >::iterator it;
+	for(it=test.closure_instance.begin();it!=test.closure_instance.end();it++)
+	{
+		LR_item a=LR_item(*it);
+		cout<<a.toString()<<endl;
+	}*/
 	/*test first(beita_a)
 	vector<string> a;
 	a.push_back("E'");
@@ -1014,4 +1052,58 @@ void init_first_sets(map<string,int>& var_list)
 	}
 
 }
-  
+ LR_item_closure& GO(const LR_item_closure& I,element X)
+ {
+	 edi_closure.clear();
+	 set<LR_item> ::iterator it;
+	 for(it=I.closure_instance.begin();it!=I.closure_instance.end();it++)
+	 {
+		 LR_item item=LR_item(*it);
+		 if(!item.get_r_element().isNull)
+			 if(item.get_r_element().index==X.index&&item.get_r_element().isVar==X.isVar)
+		         edi_closure.insert(item.ptr_r_shift());
+	 }
+	 edi_closure.closure_completion();
+	 return edi_closure;
+ }
+ set<LR_item_closure> set_C;
+ void set_C_construction()
+ {
+	 edi_closure.clear();
+	 production externed_produc;
+	 externed_produc.set_l_part(true,1);//S'
+	 externed_produc.insert_elem(element(true,2));//S
+	 edi_closure.insert(LR_item(-1,externed_produc,false,ter_list.find("#")->second));//[S'->.S,#]
+	 edi_closure.closure_completion();//CLOSURE([S'->.S,#])
+	 set_C.insert(edi_closure);
+	 map<string,int>::iterator map_it;
+	 set<LR_item_closure> ::iterator set_it; 
+	 bool isChanged=false;
+	 while(1)
+	 {
+		 isChanged=false;
+		  for(set_it=set_C.begin();set_it!=set_C.end();set_it++)
+		 {
+			 for(map_it=var_list.begin();map_it!=var_list.end();map_it++)
+			 {
+				 LR_item_closure closure=GO(*set_it,element(true,map_it->second));
+				 if(closure.size>0&&set_C.find(closure)==set_C.end())
+				 {
+					 set_C.insert(closure);
+					 isChanged=true;
+				 }
+			 }
+			 for(map_it=ter_list.begin();map_it!=ter_list.end();map_it++)
+			 {
+				  LR_item_closure closure=GO(*set_it,element(true,map_it->second));
+				 if(closure.size>0&&set_C.find(closure)==set_C.end())
+				 {
+					 set_C.insert(closure);
+					 isChanged=true;
+				 }
+			 }
+		 }
+		 if(isChanged==false)
+			 break;
+	 }
+ }
