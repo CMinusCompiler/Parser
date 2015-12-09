@@ -338,13 +338,9 @@ class flex_production:public production
 public:
 	//ptr_pos:giving the dot position(e.g.:A->a . b c, ptr_pos is 0)
     int ptr_pos;
-    bool ptr_r_shift()
-    {
-		if(ptr_pos==production::r_part_size-1)
-			return false;
-		else
-			ptr_pos++;
-    }
+
+	
+
     flex_production(int ptr_pos,production& produc):production(produc)
     {
 		this->ptr_pos=ptr_pos;
@@ -429,6 +425,22 @@ public:
     {}
     LR_item(const LR_item& item):flex_production(item),element(item)
     {}
+
+
+	//Return: a new flex_production object(with dot shifted right)
+    LR_item& ptr_r_shift()
+    {
+		LR_item* p_item=new LR_item(*this);
+		if(ptr_pos==production::r_part_size-1)
+			return *p_item;
+		else
+		{
+			p_item->ptr_pos++;
+			return *p_item;
+		}
+    }
+
+
 	bool operator<(const LR_item& produc)const
 	{
 		if(element::operator==(produc))
