@@ -4,6 +4,7 @@
 #include<vector>
 #include<set>
 #include<list>
+#include<queue>
 using namespace std;
 #define FILENAME "test2.txt"
 #define MAXROW 100
@@ -63,6 +64,14 @@ public:
     bool operator>(const element& elem)const
     {
         return this->index>elem.index;
+    }
+	bool operator==(const element& elem)const
+    {
+        return this->index==elem.index;
+    }
+	bool operator!=(const element& elem)const
+    {
+        return this->index!=elem.index;
     }
 	void clear()
 	{
@@ -139,7 +148,64 @@ public:
 
     }
 
+	bool operator<(const production& produc)const
+    {
+		if(l_part==l_part)
+		{
+			vector<element>::const_iterator it=r_part.begin();	
+			vector<element>::const_iterator _it=produc.r_part.begin();
+			for(;it<r_part.end()&&_it<produc.r_part.end();it++,_it++)
+				if((*it)!=(*_it))
+					return (*it)<(*_it);
+			return false;
+		}
+		else
+			return l_part<produc.l_part;
+        
+    }
+    bool operator>(const production& produc)const
+    {
+		if(l_part==l_part)
+		{
+			vector<element>::const_iterator it=r_part.begin();	
+			vector<element>::const_iterator _it=produc.r_part.begin();
+			for(;it<r_part.end()&&_it<produc.r_part.end();it++,_it++)
+				if((*it)!=(*_it))
+					return (*it)>(*_it);
+			return false;
+		}
+		else
+			return l_part>produc.l_part;
 
+    }
+	bool operator==(const production& produc)const
+	{
+		if(l_part==l_part)
+		{
+			vector<element>::const_iterator it=r_part.begin();	
+			vector<element>::const_iterator _it=produc.r_part.begin();
+			for(;it<r_part.end()&&_it<produc.r_part.end();it++,_it++)
+				if((*it)!=(*_it))
+					return false;
+			return true;
+		}
+		else
+			return false;
+	}
+	bool operator!=(const production& produc)const
+	{
+		if(l_part==l_part)
+		{
+			vector<element>::const_iterator it=r_part.begin();	
+			vector<element>::const_iterator _it=produc.r_part.begin();
+			for(;it<r_part.end()&&_it<produc.r_part.end();it++,_it++)
+				if((*it)!=(*_it))
+					return true;
+			return false;
+		}
+		else
+			return true;
+	}
 };
 
 set<element> edi_elem_set;
@@ -417,6 +483,43 @@ public:
 
 	}
 
+  bool operator>(const flex_production& produc)const
+	{
+		if(production::operator==(produc))
+		{
+			return this->ptr_pos>produc.ptr_pos;
+		}
+		else
+			return production::operator>(produc);
+	}
+	bool operator<(const flex_production& produc)const
+	{
+		if(production::operator==(produc))
+		{
+			return this->ptr_pos<produc.ptr_pos;
+		}
+		else
+			return production::operator<(produc);
+	}
+	bool operator==(const flex_production& produc)const
+	{
+		if(production::operator==(produc))
+		{
+			return this->ptr_pos==produc.ptr_pos;
+		}
+		else
+			return false;
+	}
+	bool operator!=(const flex_production& produc)const
+	{
+		if(production::operator==(produc))
+		{
+			return this->ptr_pos==produc.ptr_pos;
+		}
+		else
+			return true;
+	}
+
 };
 
 
@@ -429,6 +532,20 @@ public:
     {}
     LR_item(const LR_item& item):flex_production(item),element(item)
     {}
+	bool operator<(const LR_item& produc)const
+	{
+		if(element::operator==(produc))
+			return flex_production::operator<(produc);
+		else
+			return element::operator<(produc);
+	}
+	bool operator>(const LR_item& produc)const
+	{
+		if(element::operator==(produc))
+			return flex_production::operator>(produc);
+		else
+			return element::operator>(produc);
+	}
 };
 
 //LR_item closure for LR(1)
@@ -501,21 +618,25 @@ public:
 	}
 };
 int LR_item_closure::index_generator=0;
-class LR1FA_node:LR_item_closure
+class LR1FA_node:public LR_item_closure
 {
 private:
 	//Used to describe the element on the transmition arrow.
 	//Should not be in the FA_vertex_node, so "private" is confined.
 	element trans_condition;
-
+	static int index_generator;
+	int index;
 public:
 	
 	LR1FA_node():LR_item_closure()
 	{
+		index=index_generator;
+		index_generator++;
 	}
 	LR1FA_node(const LR1FA_node& node):LR_item_closure(node)
 	{
 		trans_condition=element(node.trans_condition);
+		index=node.index;
 	}
 	void set_trans_condition(element& elem)
 	{
@@ -530,17 +651,28 @@ public:
 	{
 		return trans_condition;
 	}
+	int get_index()
+	{
+		return index;
+	}
+
 
 };
+int LR1FA_node::index_generator=0;
 
-class LR1FA_vertex_node:LR1FA_node
+class LR1FA_vertex_node:public LR1FA_node
 {
+private:
+	static int index_generator;
+	int index;
 public:
 	list<LR1FA_node> adj_list;
 	int adj_list_length;
 	LR1FA_vertex_node():LR1FA_node()
 	{
 		adj_list_length=0;
+		index=index_generator;
+		index_generator++;
 	}
 	LR1FA_vertex_node(const LR1FA_vertex_node& node):LR1FA_node(node)
 	{
@@ -550,16 +682,27 @@ public:
 			push_back(*it);
 		}
 		adj_list_length=node.adj_list_length;
+		index=node.index;
+
 	}
 	void push_back(const LR1FA_node& node)
 	{
 		adj_list.push_back(node);
 		adj_list_length++;
 	}
+	int get_index()
+	{
+		return index;
+	}
 
 };
+int LR1FA_vertex_node::index_generator=0;
+
 class LR1FA_graph
 {
+//How to create a LR1FA_graph:
+//First: create all the vertex nodes, and push them back.
+//Second: create all the common nodes, and push them back to the corresponding adjcent list.
 public:
 	int vertex_node_num;
 	vector<LR1FA_vertex_node> adj_list_array;
@@ -575,26 +718,56 @@ public:
 			push_back(*it);
 		}
 	}
+
+	//Push back vertex node to the adjcent list array.
 	void push_back(const LR1FA_vertex_node& node)
 	{
 		adj_list_array.push_back(node);
 		vertex_node_num++;
 	}
+
+	//Push back a node to selected adjcent list.
+	bool push_back(int index,const LR1FA_node& node)
+	{
+		if(index<adj_list_array.size())
+		{
+			adj_list_array[index].push_back(node);
+			return true;
+		}
+		else
+			return false;
+	}
+
 	LR1FA_vertex_node& operator[](int index)
 	{
 		return adj_list_array[index];
 	}
-	void BFS(void (*f)())
+	
+	void BFS(void (*operation)(LR1FA_graph& graph,const LR1FA_node& node),LR1FA_graph& graph)
 	{
+		queue<LR1FA_vertex_node> visit_queue;
+		visit_queue.push(graph[0]);
+
+		while(!visit_queue.empty())
+		{
+			//Visit the node.
+			operation(graph,visit_queue.front());
+			
+
+			//Push the adjacent nodes.
+			list<LR1FA_node>::iterator it;
+			for(it=visit_queue.front().adj_list.begin();it!=visit_queue.front().adj_list.end();it++)
+				visit_queue.push(adj_list_array[it->get_index()]);
+			
+			//Pop the parent node.
+			visit_queue.pop();
+
+		}
+
 
 	}
-private:
-	void BFS_visit(void (*f)())
-	{
-		
-	}
+
 };
-
 /*
 class flex_production:public production
 {
@@ -741,12 +914,13 @@ void main()
 	fclose(f);
 	init_first_sets(var_list);
 	first_sets.print();
-
+   /*test LR_item_closure::closure_completion
 	LR_item_closure test;
 	test.insert(LR_item(-1,produc_set[1],0,3));
 	test.closure_completion();
-
-	/*vector<string> a;
+	*/
+	/*test first(beita_a)
+	vector<string> a;
 	a.push_back("E'");
 	a.push_back("R'");
 	a.push_back("a");
@@ -757,7 +931,6 @@ void main()
 	b.push_back(element(1,var_list.find("R'")->second ));
 	b.push_back(element(0,ter_list.find("a")->second ));
 	first_sets.find(b);*/
-
 	/*cout<<"±äÔª±í"<<endl;
 	for(it=var_list.begin();it!=var_list.end();it++)
 	{
