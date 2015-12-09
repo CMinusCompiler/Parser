@@ -347,7 +347,7 @@ public:
 	LR_item_closure(const LR_item_closure& closure)
 	{
 		set<LR_item>::const_iterator it;
-		for(it=closure.closure_instance.begin();it<closure.closure_instance.end();it++)
+		for(it=closure.closure_instance.begin();it!=closure.closure_instance.end();it++)
 			insert((*it));
 
 	}
