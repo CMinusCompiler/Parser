@@ -399,27 +399,37 @@ public:
 		return !((*this)==produc);
 	}
 
+	//$$$
 	string& toString()
 	{
-		edi_str.clear();
-		edi_str+=l_part.toString();
-        edi_str+=string("->");
+
+		string str;
+		str+=l_part.toString();
+		str+=string("->");
+
+		
+		
         
 		//¡¤
 		
-        for(int i=-1;i<r_part.size();i++)
+		
+
+        for(int i=-1;i<(int)(r_part.size());i++)
         {
 			if(i!=ptr_pos)
-				edi_str+=r_part[i].toString();
+				str+=r_part[i].toString();
             if(i!=r_part.size()-1&&i!=ptr_pos)
-                edi_str+=string(" ");
+                str+=string(" ");
 			if(i==ptr_pos)
-				edi_str+="¡¤ ";
+				str+="¡¤ ";
 			
         }
+		edi_str.clear();
+		edi_str=string(str);
 
         return edi_str;
 	}
+	//$$$
 };
 
 
@@ -476,16 +486,20 @@ public:
 		return !((*this)==produc);
 	}
 
+	//$$$
 	string& toString()
 	{
+		string str;
+		str+="[";
+		str+=flex_production::toString();
+		str+=" , ";
+		str+=element::toString();
+		str+="]";
 		edi_str.clear();
-		edi_str+="[";
-		edi_str+=flex_production::toString();
-		edi_str+=" , ";
-		edi_str+=element::toString();
-		edi_str+="]";
+		edi_str=string(str);
 		return edi_str;
 	}
+	//$$$
 
 }edi_LR_item;
 
@@ -549,6 +563,18 @@ public:
 		return false;
 		
 	}
+
+	//$$$
+	void print()
+	{
+		set<LR_item >::iterator it;
+		for(it=closure_instance.begin();it!=closure_instance.end();it++)
+		{
+			LR_item item=LR_item(*it);
+			cout<<item.toString()<<endl;
+		}
+	}
+	//$$$
 
 }edi_closure;
 
