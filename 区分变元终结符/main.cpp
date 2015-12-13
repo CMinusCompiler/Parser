@@ -55,18 +55,30 @@ public:
 		index=-1;
 		isNull=true;
 	}
+	
     bool operator<(const element& elem)const
     {
-        return this->index<elem.index;
+		if(this->isVar==elem.isVar)
+			return this->index<elem.index;
+		else
+			return this->isVar<elem.isVar;
     }
     bool operator>(const element& elem)const
     {
-        return this->index>elem.index;
+		if(this->isVar==elem.isVar)
+			return this->index>elem.index;
+		else
+			return this->isVar>elem.isVar;
     }
 	bool operator==(const element& elem)const
     {
-        return this->index==elem.index;
+		if(this->isVar==elem.isVar)
+			return this->index==elem.index;
+		else
+			return false;
+
     }
+	
 	bool operator!=(const element& elem)const
     {
         return this->index!=elem.index;
@@ -145,9 +157,10 @@ public:
         return edi_str;
 
     }
+	//$$
 	bool operator<(const production& produc)const
     {
-		if(l_part==l_part)
+		if(this->l_part==produc.l_part)
 		{
 			vector<element>::const_iterator it=r_part.begin();	
 			vector<element>::const_iterator _it=produc.r_part.begin();
@@ -162,7 +175,7 @@ public:
     }
     bool operator>(const production& produc)const
     {
-		if(l_part==l_part)
+		if(this->l_part==produc.l_part)
 		{
 			vector<element>::const_iterator it=r_part.begin();	
 			vector<element>::const_iterator _it=produc.r_part.begin();
@@ -177,7 +190,7 @@ public:
     }
 	bool operator==(const production& produc)const
 	{
-		if(l_part==l_part)
+		if(this->l_part==produc.l_part)
 		{
 			vector<element>::const_iterator it=r_part.begin();	
 			vector<element>::const_iterator _it=produc.r_part.begin();
@@ -189,6 +202,7 @@ public:
 		else
 			return false;
 	}
+	//$$
 	bool operator!=(const production& produc)const
 	{
 		return !((*this)==produc);
@@ -461,10 +475,10 @@ public:
 		}
     }
 
-	//$$
+	
 	bool operator<(const LR_item& produc)const
 	{
-		if(this->ptr_pos!=produc.ptr_pos)
+	 	if(this->ptr_pos!=produc.ptr_pos)
 			return this->ptr_pos<produc.ptr_pos;
 		
 		if(element::operator==(produc))
@@ -492,7 +506,7 @@ public:
 		else
 			return false;
 	}
-	//$$
+	
 
 	bool operator!=(const LR_item& produc)const
 	{
