@@ -449,7 +449,8 @@ public:
     {
 
 		edi_LR_item.clear();
-		
+		edi_LR_item=LR_item(*this);
+
 		if(ptr_pos==production::r_part_size-1)
 			return edi_LR_item;
 		else
