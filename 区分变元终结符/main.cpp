@@ -57,18 +57,29 @@ public:
 		index=-1;
 		isNull=true;
 	}
-    bool operator<(const element& elem)const
+   bool operator<(const element& elem)const
     {
-        return this->index<elem.index;
+		if(this->isVar==elem.isVar)
+			return this->index<elem.index;
+		else
+			return this->isVar<elem.isVar;
     }
     bool operator>(const element& elem)const
     {
-        return this->index>elem.index;
+		if(this->isVar==elem.isVar)
+			return this->index>elem.index;
+		else
+			return this->isVar>elem.isVar;
     }
 	bool operator==(const element& elem)const
     {
-        return this->index==elem.index;
+		if(this->isVar==elem.isVar)
+			return this->index==elem.index;
+		else
+			return false;
+
     }
+
 	bool operator!=(const element& elem)const
     {
         return this->index!=elem.index;
@@ -150,7 +161,7 @@ public:
 
 	bool operator<(const production& produc)const
     {
-		if(l_part==l_part)
+		if(this->l_part==produc.l_part)
 		{
 			vector<element>::const_iterator it=r_part.begin();	
 			vector<element>::const_iterator _it=produc.r_part.begin();
@@ -165,7 +176,7 @@ public:
     }
     bool operator>(const production& produc)const
     {
-		if(l_part==l_part)
+		if(this->l_part==produc.l_part)
 		{
 			vector<element>::const_iterator it=r_part.begin();	
 			vector<element>::const_iterator _it=produc.r_part.begin();
@@ -180,7 +191,7 @@ public:
     }
 	bool operator==(const production& produc)const
 	{
-		if(l_part==l_part)
+		if(this->l_part==produc.l_part)
 		{
 			vector<element>::const_iterator it=r_part.begin();	
 			vector<element>::const_iterator _it=produc.r_part.begin();
@@ -540,6 +551,9 @@ public:
     {}
 	bool operator<(const LR_item& produc)const
 	{
+		if(this->ptr_pos!=produc.ptr_pos)
+			return this->ptr_pos<produc.ptr_pos;
+		
 		if(element::operator==(produc))
 			return flex_production::operator<(produc);
 		else
@@ -547,18 +561,25 @@ public:
 	}
 	bool operator>(const LR_item& produc)const
 	{
+		if(this->ptr_pos!=produc.ptr_pos)
+			return this->ptr_pos>produc.ptr_pos;
+
 		if(element::operator==(produc))
 			return flex_production::operator>(produc);
 		else
 			return element::operator>(produc);
 	}
-  bool operator==(const LR_item& produc)const
+	bool operator==(const LR_item& produc)const
 	{
+		if(this->ptr_pos!=produc.ptr_pos)
+			return false;
+
 		if(element::operator==(produc))
 			return flex_production::operator==(produc);
 		else
 			return false;
 	}
+
 	bool operator!=(const LR_item& produc)const
 	{
 		return !((*this)==produc);
@@ -569,7 +590,7 @@ public:
     {
 
 		edi_LR_item.clear();
-		
+		edi_LR_item=LR_item(*this);
 		if(ptr_pos==production::r_part_size-1)
 			return edi_LR_item;
 		else
@@ -622,6 +643,7 @@ public:
 		set<LR_item>::const_iterator it;
 		for(it=closure.closure_instance.begin();it!=closure.closure_instance.end();it++)
 			insert((*it));
+		this->size=closure.size;
 	}
 	bool operator<(const LR_item_closure& closure)const
 	{
@@ -914,7 +936,7 @@ public:
 };
 
 */
-
+ set<LR_item_closure> set_C;
 void main()
 {
 	int i=1;
@@ -936,9 +958,12 @@ void main()
 	fgets(cstr,MAXROW,f);
 	str=cstr;
 	pos=str.find('¡ú');
-	var_list.insert(pair<string,int>("S'",i));//first insert S' into var_list
-    re_var_list.insert(pair<int,string>(i,"S'"));
-	i++;
+	if(i==1)
+	{
+		var_list.insert(pair<string,int>("S'",i));//first insert S' into var_list
+		re_var_list[i]="S'";
+		i++;
+	}
 	if(pos>0)
 	{
 		var=str.substr(0,pos-1);
@@ -1005,10 +1030,20 @@ void main()
 
 
     //test LR_item_closure::closure_completion
-	LR_item_closure test;
-	test.insert(LR_item(-1,produc_set[1],0,3));
-	test.closure_completion();
-	test.print();
+	//LR_item_closure test;
+	//test.insert(LR_item(-1,produc_set[1],0,3));
+	//test.closure_completion();
+	//test.print();
+
+	set_C_construction();
+
+	set<LR_item_closure>::iterator it;
+	for(it=set_C.begin();it!=set_C.end();it++)
+	{
+		LR_item_closure mm=LR_item_closure(*it);
+		mm.print();
+		cout<<endl<<endl;
+	}
 	/*test first(beita_a)
 	vector<string> a;
 	a.push_back("E'");
@@ -1113,12 +1148,16 @@ void init_first_sets(map<string,int>& var_list)
 		 LR_item item=LR_item(*it);
 		 if(!item.get_r_element().isNull)
 			 if(item.get_r_element().index==X.index&&item.get_r_element().isVar==X.isVar)
-		         edi_closure.insert(item.ptr_r_shift());
+			 {
+				 LR_item temp=item.ptr_r_shift();
+				  edi_closure.insert(temp);
+			 }
+		        
 	 }
 	 edi_closure.closure_completion();
 	 return edi_closure;
  }
- set<LR_item_closure> set_C;
+
  void set_C_construction()
  {
 	 edi_closure.clear();
@@ -1147,7 +1186,9 @@ void init_first_sets(map<string,int>& var_list)
 			 }
 			 for(map_it=ter_list.begin();map_it!=ter_list.end();map_it++)
 			 {
-				  LR_item_closure closure=GO(*set_it,element(true,map_it->second));
+				  LR_item_closure closure=GO(*set_it,element(false,map_it->second));
+
+				  set<LR_item_closure>::iterator mm=set_C.find(closure);
 				 if(closure.size>0&&set_C.find(closure)==set_C.end())
 				 {
 					 set_C.insert(closure);
