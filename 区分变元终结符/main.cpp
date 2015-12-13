@@ -399,7 +399,7 @@ public:
 		return !((*this)==produc);
 	}
 
-	//$$$
+	
 	string& toString()
 	{
 
@@ -429,7 +429,7 @@ public:
 
         return edi_str;
 	}
-	//$$$
+	
 };
 
 
@@ -449,6 +449,7 @@ public:
     {
 
 		edi_LR_item.clear();
+		
 		edi_LR_item=LR_item(*this);
 
 		if(ptr_pos==production::r_part_size-1)
@@ -487,7 +488,7 @@ public:
 		return !((*this)==produc);
 	}
 
-	//$$$
+	
 	string& toString()
 	{
 		string str;
@@ -500,7 +501,7 @@ public:
 		edi_str=string(str);
 		return edi_str;
 	}
-	//$$$
+	
 
 }edi_LR_item;
 
@@ -535,6 +536,8 @@ public:
 		set<LR_item>::const_iterator it;
 		for(it=closure.closure_instance.begin();it!=closure.closure_instance.end();it++)
 			insert((*it));
+		//$$
+		this->size=closure.size;
 	}
 	
 
@@ -565,7 +568,7 @@ public:
 		
 	}
 
-	//$$$
+	
 	void print()
 	{
 		set<LR_item >::iterator it;
@@ -575,7 +578,7 @@ public:
 			cout<<item.toString()<<endl;
 		}
 	}
-	//$$$
+	
 
 }edi_closure;
 
