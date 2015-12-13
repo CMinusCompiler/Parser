@@ -461,9 +461,12 @@ public:
 		}
     }
 
-
+	//$$
 	bool operator<(const LR_item& produc)const
 	{
+		if(this->ptr_pos!=produc.ptr_pos)
+			return this->ptr_pos<produc.ptr_pos;
+		
 		if(element::operator==(produc))
 			return flex_production::operator<(produc);
 		else
@@ -471,6 +474,9 @@ public:
 	}
 	bool operator>(const LR_item& produc)const
 	{
+		if(this->ptr_pos!=produc.ptr_pos)
+			return this->ptr_pos>produc.ptr_pos;
+
 		if(element::operator==(produc))
 			return flex_production::operator>(produc);
 		else
@@ -478,11 +484,16 @@ public:
 	}
 	bool operator==(const LR_item& produc)const
 	{
+		if(this->ptr_pos!=produc.ptr_pos)
+			return false;
+
 		if(element::operator==(produc))
 			return flex_production::operator==(produc);
 		else
 			return false;
 	}
+	//$$
+
 	bool operator!=(const LR_item& produc)const
 	{
 		return !((*this)==produc);
@@ -536,7 +547,7 @@ public:
 		set<LR_item>::const_iterator it;
 		for(it=closure.closure_instance.begin();it!=closure.closure_instance.end();it++)
 			insert((*it));
-		//$$
+		
 		this->size=closure.size;
 	}
 	
