@@ -157,7 +157,7 @@ public:
         return edi_str;
 
     }
-	//$$
+	
 	bool operator<(const production& produc)const
     {
 		if(this->l_part==produc.l_part)
@@ -202,7 +202,7 @@ public:
 		else
 			return false;
 	}
-	//$$
+	
 	bool operator!=(const production& produc)const
 	{
 		return !((*this)==produc);
@@ -427,17 +427,17 @@ public:
 		//¡¤
 		
 		
-
+		//$$
         for(int i=-1;i<(int)(r_part.size());i++)
         {
-			if(i!=ptr_pos)
+			if(i!=-1)
 				str+=r_part[i].toString();
             if(i!=r_part.size()-1&&i!=ptr_pos)
                 str+=string(" ");
 			if(i==ptr_pos)
 				str+="¡¤ ";
-			
-        }
+		}
+		//$$
 		edi_str.clear();
 		edi_str=string(str);
 
