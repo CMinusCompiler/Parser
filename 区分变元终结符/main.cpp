@@ -6,7 +6,7 @@
 #include<list>
 #include<queue>
 using namespace std;
-#define FILENAME "wenfa.txt"
+#define FILENAME "test2.txt"
 #define MAXROW 100
 #define EPSILON "ε"
 string var;//变元
@@ -15,6 +15,8 @@ map<string,int> ter_list;//终结符表
 map<int,string> re_var_list;//变元表
 map<int,string> re_ter_list;//终结符表
 map<string,int>::iterator it;
+
+
 
 string edi_str;
 
@@ -154,6 +156,9 @@ public:
 set<element> edi_elem_set;
 
 vector<production> produc_set;//产生式集合
+map<production,int> produc_index_map;
+
+
 class FIRST
 {
 private:
@@ -509,6 +514,11 @@ public:
 	}
 	bool operator==(const LR_item& produc)const
 	{
+		string str1=this->toString();
+		string str2=produc.toString();
+
+		return (str1==str2);
+
 		return this->toString()==produc.toString();
 	}
 	bool operator!=(const LR_item& produc)const
@@ -538,10 +548,14 @@ public:
 //LR_item closure for LR(1)
 class LR_item_closure
 {
+private:
+	static int index_generator;
 public:
 	set<LR_item> closure_instance;
 	int size;
-	
+	int index;
+
+
 	//Return: successfully done or not.
 	bool insert(const LR_item& item)
 	{
@@ -553,11 +567,20 @@ public:
 		return true;
 	}
 
+	static void incre()
+	{
+		index_generator++;
+	}
+	static int get_index_generator()
+	{
+		return index_generator;
+	}
 	
 	
 	LR_item_closure()
 	{
 		size=0;
+		
 	}
 	LR_item_closure(const LR_item_closure& closure)
 	{
@@ -566,6 +589,8 @@ public:
 			insert((*it));
 		
 		this->size=closure.size;
+
+		this->index=closure.index;
 	}
 	
 
@@ -634,6 +659,7 @@ public:
 
 	void print()
 	{
+		cout<<"I"<<index<<":"<<endl;
 		set<LR_item >::iterator it;
 		for(it=closure_instance.begin();it!=closure_instance.end();it++)
 		{
@@ -644,168 +670,127 @@ public:
 	
 
 }edi_closure;
+int LR_item_closure::index_generator=0;
 
-
-
-
-class LR1FA_node:public LR_item_closure
+enum action_type
 {
-private:
-	//Used to describe the element on the transmition arrow.
-	//Should not be in the FA_vertex_node, so "private" is confined.
-	element trans_condition;
-	static int index_generator;
+	shift,reduction,accept,error
+};
+class action
+{
+public:
+	action_type type;
+	//state index or production index
 	int index;
-public:
-	
-	LR1FA_node():LR_item_closure()
+	bool isNull;
+	action()
 	{
-		index=index_generator;
-		index_generator++;
+		type=action_type::error;
+		isNull=1;
 	}
-	LR1FA_node(const LR1FA_node& node):LR_item_closure(node)
+	action(action_type type,int index)
 	{
-		trans_condition=element(node.trans_condition);
-		index=node.index;
+		this->type=type;
+		this->index=index;
+		isNull=0;
 	}
-	void set_trans_condition(element& elem)
+	action(const action& act)
 	{
-		trans_condition=element(elem);
+		this->type=act.type;
+		this->index=act.index;
+		this->isNull=act.isNull;
 	}
-	void set_trans_condition(bool isVar,int index)
+	string& toString()const
 	{
-		trans_condition.isVar=isVar;
-		trans_condition.index=index;
+		edi_str.clear();
+		string str;
+		switch (type)
+		{
+		case shift:
+			str+="s";
+			str+=index;
+			break;
+		case reduction:
+			str+="r";
+			str+=index;
+			break;
+		case accept:
+			str+="acc";
+			break;
+		case error:
+			str+="err";
+			break;
+		default:
+			break;
+		}
+		edi_str=string(str);
+		return edi_str;
 	}
-	element& get_trans_condition()
-	{
-		return trans_condition;
-	}
-	int get_index()
-	{
-		return index;
-	}
-
-
-};
-int LR1FA_node::index_generator=0;
-
-class LR1FA_vertex_node:public LR1FA_node
+}edi_action;
+class LR_analysis_table
 {
+public:
+	action& at(int index,element elem) 
+	{
+		return  (table[index])[elem];
+		
+	}
+	void set_row(int index,const map<element,action>& row)
+	{
+		table[index]=row;
+	}
+	void set(int index,element elem,const action& act)
+	{
+		//If it exists already
+		if(table[index].find(elem)!=table[index].end())
+		{
+
+			string str1=(table[index])[elem].toString();
+			string str2=act.toString();
+			if(str1!=str2)
+			{
+			//There is a conflict.
+				cout<<"Conflicts at (I"<<index<<","<<elem.toString()<<"):"
+					<<str1<<" vs. "<<str2<<endl;
+			}
+
+		}
+		(table[index])[elem]=act;
+	}
+
 private:
-	static int index_generator;
-	int index;
-public:
-	list<LR1FA_node> adj_list;
-	int adj_list_length;
-	LR1FA_vertex_node():LR1FA_node()
-	{
-		adj_list_length=0;
-		index=index_generator;
-		index_generator++;
-	}
-	LR1FA_vertex_node(const LR1FA_vertex_node& node):LR1FA_node(node)
-	{
-		list<LR1FA_node>::const_iterator it;
-		for(it=node.adj_list.begin();it!=node.adj_list.end();it++)
-		{
-			push_back(*it);
-		}
-		adj_list_length=node.adj_list_length;
-		index=node.index;
+	map<int,map<element,action>> table;
+	//static vector<map<element,action>> table;
+}LR_table;
 
-	}
-	void push_back(const LR1FA_node& node)
-	{
-		adj_list.push_back(node);
-		adj_list_length++;
-	}
-	int get_index()
-	{
-		return index;
-	}
-
-};
-int LR1FA_vertex_node::index_generator=0;
-
-class LR1FA_graph
-{
-//How to create a LR1FA_graph:
-//First: create all the vertex nodes, and push them back.
-//Second: create all the common nodes, and push them back to the corresponding adjcent list.
-public:
-	int vertex_node_num;
-	vector<LR1FA_vertex_node> adj_list_array;
-	LR1FA_graph()
-	{
-		vertex_node_num=0;
-	}
-	LR1FA_graph(const LR1FA_graph& graph)
-	{
-		vector<LR1FA_vertex_node>::const_iterator it;
-		for(it=graph.adj_list_array.begin();it<graph.adj_list_array.end();it++)
-		{
-			push_back(*it);
-		}
-	}
-
-	//Push back vertex node to the adjcent list array.
-	void push_back(const LR1FA_vertex_node& node)
-	{
-		adj_list_array.push_back(node);
-		vertex_node_num++;
-	}
-
-	//Push back a node to selected adjcent list.
-	bool push_back(int index,const LR1FA_node& node)
-	{
-		if(index<adj_list_array.size())
-		{
-			adj_list_array[index].push_back(node);
-			return true;
-		}
-		else
-			return false;
-	}
-
-	LR1FA_vertex_node& operator[](int index)
-	{
-		return adj_list_array[index];
-	}
-	
-	void BFS(void (*operation)(LR1FA_graph& graph,const LR1FA_node& node))
-	{
-		queue<LR1FA_vertex_node> visit_queue;
-		visit_queue.push((*this)[0]);
-
-		while(!visit_queue.empty())
-		{
-			//Visit the node.
-			operation(*this,visit_queue.front());
-			
-
-			//Push the adjacent nodes.
-			list<LR1FA_node>::iterator it;
-			for(it=visit_queue.front().adj_list.begin();it!=visit_queue.front().adj_list.end();it++)
-				visit_queue.push(adj_list_array[it->get_index()]);
-			
-			//Pop the parent node.
-			visit_queue.pop();
-
-		}
-
-
-	}
-
-};
-
+set<LR_item_closure> set_C;
+void split(std::string& s, std::string& delim,std::vector< std::string >* ret);
+void init_first_sets(map<string,int>& var_list);
+LR_item_closure& GO(const LR_item_closure& I,element X)
+ {
+	 edi_closure.clear();
+	 set<LR_item> ::iterator it;
+	 for(it=I.closure_instance.begin();it!=I.closure_instance.end();it++)
+	 {
+		 LR_item item=LR_item(*it);
+		 if(!item.get_r_element().isNull)
+			 if(item.get_r_element().index==X.index&&item.get_r_element().isVar==X.isVar)
+			 {
+				 LR_item temp=item.ptr_r_shift();
+				  edi_closure.insert(temp);
+			 }
+		        
+	 }
+	 edi_closure.closure_completion();
+	 return edi_closure;
+ }
+void set_C_construction();
 
 
 void main()
 {
-
-
 	int i=1;
+	int produc_index_generator=0;
 	string s=" ";
 	string str;
 	string ter_var;//产生式右边的串
@@ -824,6 +809,12 @@ void main()
 	fgets(cstr,MAXROW,f);
 	str=cstr;
 	pos=str.find('→');
+	if(i==1)
+	{
+		var_list.insert(pair<string,int>("S'",i));//first insert S' into var_list
+		re_var_list[i]="S'";
+		i++;
+	}
 	if(pos>0)
 	{
 		var=str.substr(0,pos-1);
@@ -845,45 +836,81 @@ void main()
 	i=1;
 	while(!feof(f))
 	{
-	fgets(cstr,MAXROW,f);
-	str=cstr;
-	if(str[str.length()-1]=='\n')
-		str.resize(str.size()-1);
-	pos=str.find('→');
-	if(pos>0)
-	{
-		production product;
-		product.set_l_part(true,var_list.find(str.substr(0,pos-1))->second);
-		//ter_var=str.substr(pos+1,str.length()-pos-2);//产生式右部
-		ter_var=str.substr(pos+1,str.length()-pos-1);//产生式右部
-		split(ter_var,s,&var_ter_vec);
-		for(int j=0;j<var_ter_vec.size();j++)
+		fgets(cstr,MAXROW,f);
+		str=cstr;
+		if(str[str.length()-1]=='\n')
+			str.resize(str.size()-1);
+		pos=str.find('→');
+		if(pos>0)
 		{
-			if((var_list.find(var_ter_vec[j]))==var_list.end())//不是变元，即为终结符
+			production product;
+			product.set_l_part(true,var_list.find(str.substr(0,pos-1))->second);
+			ter_var=str.substr(pos+1,str.length()-pos-1);//产生式右部
+			split(ter_var,s,&var_ter_vec);
+			for(int j=0;j<var_ter_vec.size();j++)
 			{
-
-				if(ter_list.find(var_ter_vec[j])==ter_list.end())
+				if((var_list.find(var_ter_vec[j]))==var_list.end())//不是变元，即为终结符
 				{
-				   product.insert_elem(element(false,i));//产生式插入右部终结符
-				   ter_list.insert(pair<string,int>(var_ter_vec[j],i));//插入终结符表				   
-				   re_ter_list[i]=var_ter_vec[j];//re_ter_list.insert(pair<int,string>(i,var_ter_vec[j]));
-				   i++;
+
+					if(ter_list.find(var_ter_vec[j])==ter_list.end())
+					{
+					   product.insert_elem(element(false,i));//产生式插入右部终结符
+					   ter_list.insert(pair<string,int>(var_ter_vec[j],i));//插入终结符表				   
+					   re_ter_list[i]=var_ter_vec[j];//re_ter_list.insert(pair<int,string>(i,var_ter_vec[j]));
+					   i++;
+					}
+					else
+						product.insert_elem(element(false,ter_list.find(var_ter_vec[j])->second));//产生式插入右部终结符
 				}
-				else
-					product.insert_elem(element(false,ter_list.find(var_ter_vec[j])->second));//产生式插入右部终结符
-			}
-			else//变元
-			{
-				
-				product.insert_elem(element(true,(var_list.find(var_ter_vec[j]))->second));//产生式插入右部变元
-			}
-		}	
-		produc_set.push_back(product);//构造produc_set
-	}    
+				else//变元
+				{	
+					product.insert_elem(element(true,(var_list.find(var_ter_vec[j]))->second));//产生式插入右部变元
+				}
+			}	
+			produc_set.push_back(product);//构造produc_set
+			
+			//Assign index
+			produc_index_map[product]=produc_index_generator;
+			produc_index_generator++;
+		}    
 	}
+	ter_list.insert(pair<string,int>("#",i));//最后#也插入终结符表				   
+    re_ter_list[i]="#";
+
 	fclose(f);
 	init_first_sets(var_list);
-	first_sets.print();
+	//first_sets.print();
+	//set_C_construction();
+
+
+
+    //test LR_item_closure::closure_completion
+	//LR_item_closure test;
+	//test.insert(LR_item(-1,produc_set[1],0,3));
+	//test.closure_completion();
+	//test.print();
+
+	set_C_construction();
+
+	set<LR_item_closure>::iterator it;
+	for(it=set_C.begin();it!=set_C.end();it++)
+	{
+		LR_item_closure mm=LR_item_closure(*it);
+		mm.print();
+		cout<<endl<<endl;
+	}
+	/*test first(beita_a)
+	vector<string> a;
+	a.push_back("E'");
+	a.push_back("R'");
+	a.push_back("a");
+	first_sets.find(a);
+
+	vector<element> b;
+	b.push_back(element(1,var_list.find("E'")->second ));
+	b.push_back(element(1,var_list.find("R'")->second ));
+	b.push_back(element(0,ter_list.find("a")->second ));
+	first_sets.find(b);*/
 	/*cout<<"变元表"<<endl;
 	for(it=var_list.begin();it!=var_list.end();it++)
 	{
@@ -918,7 +945,7 @@ void split(std::string& s, std::string& delim,std::vector< std::string >* ret)
 void init_first_sets(map<string,int>& var_list)
 {//求所有变元的first集
 	bool isChanged=false;
-	map<string,int>::iterator it;
+	map<string,int>::iterator it; 
 	set<element>::iterator set_it;
 
 	while(1)
@@ -942,16 +969,19 @@ void init_first_sets(map<string,int>& var_list)
 								for(set_it=first_yk.begin();set_it!=first_yk.end();set_it++)//将first(Yk)中所有非空元素加入first(X)
 									if((*set_it).toString().compare(EPSILON)!=0)	
 										isChanged|=first_sets.insert(it->first,*set_it);
-								if(first_sets.find(produc_set[i].r_part[k].toString()).find(element(false,ter_list.find(EPSILON)->second))!=(first_sets.find(produc_set[i].r_part[k].toString())).end())
-								{//如果first(Yk)有空
-									if(k==produc_set[i].r_part.size()-1)
-									{									
-										isChanged|=first_sets.insert(it->first,element(false,ter_list.find(EPSILON)->second));//插入空
-										break;
+								if(ter_list.find(EPSILON)!=ter_list.end())
+								{
+									if(first_sets.find(produc_set[i].r_part[k].toString()).find(element(false,ter_list.find(EPSILON)->second))!=(first_sets.find(produc_set[i].r_part[k].toString())).end())
+									{//如果first(Yk)有空
+										if(k==produc_set[i].r_part.size()-1)
+										{									
+											isChanged|=first_sets.insert(it->first,element(false,ter_list.find(EPSILON)->second));//插入空
+											break;
+										}
 									}
+									else
+										break;
 								}
-								else
-									break;
 							}
 							
 						}
@@ -963,4 +993,149 @@ void init_first_sets(map<string,int>& var_list)
 			break;
 	}
 
+}
+ 
+void set_C_construction()
+{
+
+	edi_closure.clear();
+	production externed_produc;
+	externed_produc.set_l_part(true,1);//S'
+	externed_produc.insert_elem(element(true,2));//S
+	edi_closure.insert(LR_item(-1,externed_produc,false,ter_list.find("#")->second));//[S'->.S,#]
+	edi_closure.closure_completion();//CLOSURE([S'->.S,#])
+
+	//set the index of the closure
+	edi_closure.index=LR_item_closure::get_index_generator();
+	LR_item_closure::incre();
+
+	set<LR_item>::iterator iter;
+	for(iter=edi_closure.closure_instance.begin();iter!=edi_closure.closure_instance.end();iter++)
+	{
+		//Reduction action:
+		LR_item item=LR_item(*iter);
+		//If it is a reduction item
+		if(item.get_r_element().isNull)
+			LR_table.set(edi_closure.index,item,action(action_type::reduction,produc_index_map[item]));
+	}
+
+
+
+	
+
+	set_C.insert(edi_closure);
+	map<string,int>::iterator map_it;
+	set<LR_item_closure> ::iterator set_it; 
+	bool isChanged=false;
+	while(1)
+	{
+		isChanged=false;
+		for(set_it=set_C.begin();set_it!=set_C.end();set_it++)
+		{
+			for(map_it=var_list.begin();map_it!=var_list.end();map_it++)
+			{
+				LR_item_closure closure=GO(*set_it,element(true,map_it->second));
+				//If it is going to be inserted
+
+				
+				if(closure.size>0&&set_C.find(closure)==set_C.end())
+				{
+					//set the index of the closure
+					closure.index=LR_item_closure::get_index_generator();
+					LR_item_closure::incre();
+				}
+				else if(closure.size>0)
+				{
+					closure.index=set_C.find(closure)->index;		
+				}
+				else
+					continue;
+				//If it is a empty closure, continue.
+
+	
+				//Shift action:
+				LR_table.set(set_it->index,element(true,map_it->second),action(action_type::shift,closure.index));
+				
+				
+				set<LR_item>::iterator iter;
+				for(iter=closure.closure_instance.begin();iter!=closure.closure_instance.end();iter++)
+				{
+					//Reduction action:
+					LR_item item=LR_item(*iter);
+					
+					//Accept action:
+					if(item==LR_item(0,externed_produc,false,ter_list.find("#")->second))
+					{
+						cout<<item.toString()<<endl;
+						LR_table.set(closure.index,element(false,ter_list.find("#")->second),action(action_type::accept,-1));
+						//Do not need other iterations then.
+						break;
+					}
+					
+					//If it is a reduction item
+					if(item.get_r_element().isNull)
+						LR_table.set(closure.index,item,action(action_type::reduction,produc_index_map[item]));
+					
+					
+				}
+
+				
+				
+
+				if(closure.size>0&&set_C.find(closure)==set_C.end())
+				{
+					
+
+					set_C.insert(closure);
+					
+					isChanged=true;
+				}
+			}
+			for(map_it=ter_list.begin();map_it!=ter_list.end();map_it++)
+			{
+
+				
+
+				LR_item_closure closure=GO(*set_it,element(false,map_it->second));
+
+				//If it is going to be inserted
+				if(closure.size>0&&set_C.find(closure)==set_C.end())
+				{
+					//set the index of the closure
+					closure.index=LR_item_closure::get_index_generator();
+					LR_item_closure::incre();
+				}
+				else if(closure.size>0)
+				{
+					closure.index=set_C.find(closure)->index;		
+				}
+				else
+					continue;
+
+				//Shift action:
+				LR_table.set(set_it->index,element(false,map_it->second),action(action_type::shift,closure.index));
+				
+				
+				set<LR_item>::iterator iter;
+				for(iter=closure.closure_instance.begin();iter!=closure.closure_instance.end();iter++)
+				{
+					//Reduction action:
+					LR_item item=LR_item(*iter);
+					//If it is a reduction item
+					if(item.get_r_element().isNull)
+						LR_table.set(closure.index,item,action(action_type::reduction,produc_index_map[item]));
+				}
+				
+				if(closure.size>0&&set_C.find(closure)==set_C.end())
+				{
+					
+
+					set_C.insert(closure);
+					isChanged=true;
+				}
+			}
+		}
+		if(isChanged==false)
+			break;
+	}
 }
