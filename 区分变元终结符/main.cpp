@@ -55,34 +55,15 @@ public:
 		index=-1;
 		isNull=true;
 	}
-	
+	//$$
     bool operator<(const element& elem)const
     {
-		if(this->isVar==elem.isVar)
-			return this->index<elem.index;
-		else
-			return this->isVar<elem.isVar;
-    }
-    bool operator>(const element& elem)const
-    {
-		if(this->isVar==elem.isVar)
-			return this->index>elem.index;
-		else
-			return this->isVar>elem.isVar;
-    }
-	bool operator==(const element& elem)const
-    {
-		if(this->isVar==elem.isVar)
-			return this->index==elem.index;
-		else
-			return false;
+		string str1=this->toString();
+		string str2=elem.toString();
 
+		return (str1<str2);
     }
-	
-	bool operator!=(const element& elem)const
-    {
-        return this->index!=elem.index;
-    }
+	//$$
 	void clear()
 	{
 		index=-1;
@@ -130,7 +111,8 @@ public:
 		if(elem.toString().compare(EPSILON)==0)
 			isWithEPSILON=true;
     }
-    string& toString()
+	//$$
+    string& toString() const
     {
         /*string* produc=new string();
         (*produc)+=l_part.toString();
@@ -146,7 +128,7 @@ public:
 		edi_str.clear();
 		edi_str+=l_part.toString();
         edi_str+=string("->");
-        vector<element>::iterator it;
+        vector<element>::const_iterator it;
         for(it=r_part.begin();it<r_part.end();it++)
         {
             edi_str+=it->toString();
@@ -160,53 +142,13 @@ public:
 	
 	bool operator<(const production& produc)const
     {
-		if(this->l_part==produc.l_part)
-		{
-			vector<element>::const_iterator it=r_part.begin();	
-			vector<element>::const_iterator _it=produc.r_part.begin();
-			for(;it<r_part.end()&&_it<produc.r_part.end();it++,_it++)
-				if((*it)!=(*_it))
-					return (*it)<(*_it);
-			return false;
-		}
-		else
-			return l_part<produc.l_part;
-        
-    }
-    bool operator>(const production& produc)const
-    {
-		if(this->l_part==produc.l_part)
-		{
-			vector<element>::const_iterator it=r_part.begin();	
-			vector<element>::const_iterator _it=produc.r_part.begin();
-			for(;it<r_part.end()&&_it<produc.r_part.end();it++,_it++)
-				if((*it)!=(*_it))
-					return (*it)>(*_it);
-			return false;
-		}
-		else
-			return l_part>produc.l_part;
+		string str1=this->toString();
+		string str2=produc.toString();
 
+		return (str1<str2);
     }
-	bool operator==(const production& produc)const
-	{
-		if(this->l_part==produc.l_part)
-		{
-			vector<element>::const_iterator it=r_part.begin();	
-			vector<element>::const_iterator _it=produc.r_part.begin();
-			for(;it<r_part.end()&&_it<produc.r_part.end();it++,_it++)
-				if((*it)!=(*_it))
-					return false;
-			return true;
-		}
-		else
-			return false;
-	}
-	
-	bool operator!=(const production& produc)const
-	{
-		return !((*this)==produc);
-	}
+	//$$
+
 };
 
 set<element> edi_elem_set;
@@ -260,7 +202,7 @@ public:
 
 
 
-   set<element>& find(string x)
+    set<element>& find(string x)
     {
 		/*
         set<element>* a=new set<element>;
@@ -320,6 +262,111 @@ public:
         }
 
     }
+	//$$
+	vector<string> find(vector<string>& beta_a)
+   { //求first(beita a),其中beita=（V|T）*，a属于T
+    //返回first集，vector中string均属于T
+	vector<string> first;
+	set<element>::iterator it;
+	vector<production>::iterator pro_it;
+	bool epsilon=false;
+	bool exist=false;
+	for(int i=0;i<beta_a.size();i++)
+	{
+		exist=false;
+		if(ter_list.find(beta_a[i])==ter_list.end())//beta_a[i]是变元
+		{		
+			for(it=first_sets.find(beta_a[i]).begin();it!=first_sets.find(beta_a[i]).end();it++)
+				if(it->toString().compare(EPSILON)!=0)
+				{
+					for(int j=0;j<first.size();j++)
+						if(first[j].compare(it->toString())==0)
+						{//已存在，不需加入
+							exist=true;
+							break;
+						}
+					if(!exist)
+			           first.push_back(it->toString());//将beta_a[i]的first集加入,不加入空,不重复加入
+				}
+			for(pro_it=produc_set.begin();pro_it<produc_set.end();pro_it++)
+			{//遍历产生式集合，看beta_a[i]是否能产生空
+				if(pro_it->l_part.toString().compare(beta_a[i])==0)//找到beta_a[i]的产生式
+				   if(pro_it->isWithEPSILON)
+				   {
+					   epsilon=true;
+					   break;
+				   }
+			}
+			if(!epsilon)//beta_a[i]不含空产生式
+				break;
+		}
+		else//beta_a[i]是终结符，加入first集，注意#也是终结符
+		{
+			for(int j=0;j<first.size();j++)
+				if(first[j].compare(beta_a[i])==0)
+				{//已存在，不需加入
+					exist=true;
+					break;
+				}
+			if(!exist)
+			    first.push_back(beta_a[i]);
+			break;
+		}
+	}
+	return first;
+    }
+    set<element> find(vector<element>& beta_a)
+   { //求first(beita a),其中beita=（V|T）*，a属于T
+    //返回first集
+	set<element> first;
+	set<element>::iterator it;
+	vector<production>::iterator pro_it;
+	bool epsilon=false;
+	bool exist=false;
+	for(int i=0;i<beta_a.size();i++)
+	{
+		exist=false;
+		if(ter_list.find(beta_a[i].toString())==ter_list.end())//beta_a[i]是变元
+		{		
+			for(it=first_sets.find(beta_a[i].toString()).begin();it!=first_sets.find(beta_a[i].toString()).end();it++)
+				if(it->toString().compare(EPSILON)!=0)
+				{
+					
+					if(first.find(element(false,ter_list.find(it->toString())->second))!=first.end())
+					{//已存在，不需加入
+						exist=true;
+						break;
+					}
+					if(!exist)
+			           first.insert(element(false,ter_list.find(it->toString())->second));//将beta_a[i]的first集加入,不加入空,不重复加入
+				}
+			for(pro_it=produc_set.begin();pro_it<produc_set.end();pro_it++)
+			{//遍历产生式集合，看beta_a[i]是否能产生空
+				if(pro_it->l_part.toString().compare(beta_a[i].toString())==0)//找到beta_a[i]的产生式
+				   if(pro_it->isWithEPSILON)
+				   {
+					   epsilon=true;
+					   break;
+				   }
+			}
+			if(!epsilon)//beta_a[i]不含空产生式
+				break;
+		}
+		else//beta_a[i]是终结符，加入first集，注意#也是终结符
+		{
+			if(first.find(element(false,beta_a[i].index))!=first.end())
+			{//已存在，不需加入
+				exist=true;
+				break;
+			}
+			if(!exist)
+				first.insert(element(false,beta_a[i].index));
+			break;
+		}
+	}
+	return first;
+    }
+	//$$
 	
 	void print()
 	{
@@ -381,40 +428,15 @@ public:
 
 	}
 
-	bool operator>(const flex_production& produc)const
-	{
-		if(production::operator==(produc))
-		{
-			return this->ptr_pos>produc.ptr_pos;
-		}
-		else
-			return production::operator>(produc);
-	}
+	//$$
 	bool operator<(const flex_production& produc)const
 	{
-		if(production::operator==(produc))
-		{
-			return this->ptr_pos<produc.ptr_pos;
-		}
-		else
-			return production::operator<(produc);
-	}
-	bool operator==(const flex_production& produc)const
-	{
-		if(production::operator==(produc))
-		{
-			return this->ptr_pos==produc.ptr_pos;
-		}
-		else
-			return false;
-	}
-	bool operator!=(const flex_production& produc)const
-	{
-		return !((*this)==produc);
-	}
+		string str1=this->toString();
+		string str2=produc.toString();
 
-	
-	string& toString()
+		return (str1<str2);
+	}
+	string& toString()const
 	{
 
 		string str;
@@ -427,7 +449,7 @@ public:
 		//·
 		
 		
-		//$$
+
         for(int i=-1;i<(int)(r_part.size());i++)
         {
 			if(i!=-1)
@@ -435,14 +457,16 @@ public:
             if(i!=r_part.size()-1&&i!=ptr_pos)
                 str+=string(" ");
 			if(i==ptr_pos)
-				str+="· ";
-		}
-		//$$
+				str+="·";
+			
+			
+        }
 		edi_str.clear();
 		edi_str=string(str);
 
         return edi_str;
 	}
+	//$$
 	
 };
 
@@ -475,46 +499,24 @@ public:
 		}
     }
 
-	
+	//$$
 	bool operator<(const LR_item& produc)const
 	{
-	 	if(this->ptr_pos!=produc.ptr_pos)
-			return this->ptr_pos<produc.ptr_pos;
-		
-		if(element::operator==(produc))
-			return flex_production::operator<(produc);
-		else
-			return element::operator<(produc);
-	}
-	bool operator>(const LR_item& produc)const
-	{
-		if(this->ptr_pos!=produc.ptr_pos)
-			return this->ptr_pos>produc.ptr_pos;
+	 	string str1=this->toString();
+		string str2=produc.toString();
 
-		if(element::operator==(produc))
-			return flex_production::operator>(produc);
-		else
-			return element::operator>(produc);
+		return (str1<str2);
 	}
 	bool operator==(const LR_item& produc)const
 	{
-		if(this->ptr_pos!=produc.ptr_pos)
-			return false;
-
-		if(element::operator==(produc))
-			return flex_production::operator==(produc);
-		else
-			return false;
+		return this->toString()==produc.toString();
 	}
-	
-
 	bool operator!=(const LR_item& produc)const
 	{
-		return !((*this)==produc);
+		return this->toString()!=produc.toString();
 	}
-
 	
-	string& toString()
+	string& toString()const
 	{
 		string str;
 		str+="[";
@@ -526,6 +528,7 @@ public:
 		edi_str=string(str);
 		return edi_str;
 	}
+	//$$
 	
 
 }edi_LR_item;
@@ -571,29 +574,64 @@ public:
 		closure_instance.clear();
 		size=0;
 	}
+	//$$
 	bool operator<(const LR_item_closure& closure)const
 	{
-		set<LR_item>::iterator it=this->closure_instance.begin();
-		set<LR_item>::iterator _it=closure.closure_instance.begin();
-		for(;it!=this->closure_instance.end()&&_it!=closure.closure_instance.end();it++,_it++)
-			if((*it)!=(*_it))
-				return (*it)<(*_it);
-		return false;
 		
 		
-	}
-	bool operator>(const LR_item_closure& closure)const
-	{
+		if(this->size!=closure.size)
+			return this->size<closure.size;
+		
 		set<LR_item>::iterator it=this->closure_instance.begin();
-		set<LR_item>::iterator _it=closure.closure_instance.begin();
-		for(;it!=this->closure_instance.end()&&_it!=closure.closure_instance.end();it++,_it++)
-			if((*it)!=(*_it))
-				return (*it)>(*_it);
+		for(;it!=this->closure_instance.end();it++)
+		{
+			//if it does not exist.
+			if(closure.closure_instance.find(*it)==closure.closure_instance.end())
+				return (*it)<(*(closure.closure_instance.begin()));
+			
+		}
 		return false;
 		
 	}
+	void closure_completion()
+	{//  closure_instance=CLOSURE（closure_instance）
+		set<LR_item>::iterator it;
+		bool isChanged=false;
+		while(1)
+		{
+			isChanged=false;
+			for(it=closure_instance.begin();it!=closure_instance.end();it++)
+			{
+				LR_item not_const_it=LR_item(*it);
+				element B=not_const_it.get_r_element();
+				//element B=it->get_r_element();
+				if(!B.isNull)//the dot isn't at the rightest
+				{		
+					if(B.isVar)//the right of the dot is a V    ;A->a.B……
+					{
+						for(int i=0;i<produc_set.size();i++)
+						{
+							if(produc_set[i].l_part.index==B.index&&produc_set[i].l_part.isVar==B.isVar)//it->get_r_element() production ;B->……
+							{
+								vector<element> beta_a;
+								for(int j=it->ptr_pos+2;j<it->r_part_size;j++)//A->a.Bbeita,a, put beita to vector<element> beta_a
+									beta_a.push_back(element(it->r_part[j].isVar,it->r_part[j].index));
+								beta_a.push_back(element(false,it->index));//A->a.Bbeita,a, put a to vector<element> beta_a
+								set<element>  first_beita_a=first_sets.find(beta_a);
+								set<element>::iterator first_it;
+								for(first_it=first_beita_a.begin();first_it!=first_beita_a.end();first_it++)//first(beta_a)
+									isChanged|=insert(LR_item(-1,produc_set[i],false,first_it->index));
+							}
+						}
+					}
+				}
+			}
+			if(isChanged==false)//until not change
+				break;
+		}		
+	}
+	//$$
 
-	
 	void print()
 	{
 		set<LR_item >::iterator it;
