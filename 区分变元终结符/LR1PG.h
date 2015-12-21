@@ -39,7 +39,7 @@ namespace LR1PG
 			isNull=true;
 		}
 		
-		string& toString() const;
+		string toString() const;
 		bool operator<(const element& elem)const;
 		void clear();
 	
@@ -73,7 +73,7 @@ namespace LR1PG
 
 		void set_l_part(bool isVar,int index);
 		void insert_elem(const element& elem);
-		string& toString() const;
+		string toString() const;
 		bool operator<(const production& produc)const;
 		
 
@@ -92,7 +92,7 @@ namespace LR1PG
    
 		//Return: successful or not
 		bool insert(const string& x,const element& elem);
-		set<element>& find(string x);
+		set<element> find(string x);
 		//$$
 		vector<string> find(vector<string>& beta_a);
 		set<element> find(vector<element>& beta_a);
@@ -121,10 +121,10 @@ namespace LR1PG
 		}
 
 
-		element& get_l_element();
-		element& get_r_element();
+		element get_l_element();
+		element get_r_element();
 		bool operator<(const flex_production& produc)const;
-		string& toString()const;
+		string toString()const;
 		
 	
 	};
@@ -140,11 +140,11 @@ namespace LR1PG
 
 
 		//Return: a flex_production reference object(with dot shifted right)
-		LR_item& ptr_r_shift();
+		LR_item ptr_r_shift();
 		bool operator<(const LR_item& produc)const;
 		bool operator==(const LR_item& produc)const;
 		bool operator!=(const LR_item& produc)const;
-		string& toString()const;
+		string toString()const;
 		
 	
 
@@ -219,12 +219,12 @@ namespace LR1PG
 		}
 
 
-		string& toString()const;
+		string toString()const;
 	};
 	class LR_analysis_table
 	{
 	public:
-		action& at(int index,element elem);
+		action at(int index,element elem);
 		void set_row(int index,const map<element,action>& row);
 		void set(int index,element elem,const action& act);
 		int num_of_lines;
@@ -238,7 +238,7 @@ namespace LR1PG
 		//static vector<map<element,action>> table;
 	};
 	
-	LR_item_closure& GO(const LR_item_closure& I,element X);
+	LR_item_closure GO(const LR_item_closure& I,element X);
 	void set_C_construction();
 	void load_productions();
 	void generate_table();
@@ -253,13 +253,14 @@ namespace LR1PG
 	extern map<int,string> re_var_list;//¡À???¡À¨ª
 	extern map<int,string> re_ter_list;//???¨¢¡¤?¡À¨ª
 	extern map<string,int>::iterator it;
-	extern string edi_str;
-	extern element edi_elem;
-	extern LR_item edi_LR_item;
-	extern set<element> edi_elem_set;
+	
+	extern element 
+		;
+	
+	
 	extern FIRST first_sets;
-	extern LR_item_closure edi_closure;
-	extern action edi_action;
+	
+	
 	extern LR_analysis_table LR_table;
 	extern vector<production> produc_set;//?¨²?¨²??????
 	extern map<production,int> produc_index_map;
