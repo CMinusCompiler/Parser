@@ -42,8 +42,16 @@ private:
 	static map<int,LR1PG::LR_item_closure> S;
 	
 	static stack<stack_block> LR_stack;
-	static void shift(int state_index,const LR1PG::element& elem);
-	static void reduction(int produc_index);
+	static void shift(int state_index,const LR1PG::element& elem)
+	{
+		LR_stack.push(stack_block(state_index,elem));	
+	}
+	static void reduction(int produc_index)
+	{
+		int num=production_set[produc_index].r_part_size;
+		for(int i=0;i<num;i++)
+			LR_stack.pop();
+	}
 
 public:
 	void static load(const map<string,int>& v_list,const map<string,int>& t_list,
