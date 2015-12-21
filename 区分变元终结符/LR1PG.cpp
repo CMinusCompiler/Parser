@@ -1,7 +1,7 @@
 #include "LR1PG.h"
-
-
-namespace LP1PG
+//#include "stdafx.h"
+#include <conio.h>
+namespace LR1PG
 {
 	map<string,int> var_list;//变元表
 	map<string,int> ter_list;//终结符表
@@ -299,6 +299,7 @@ namespace LP1PG
 	void  FIRST::print()
 	{
 		set<element>::iterator set_it;
+		map<string,int>::iterator it;
 		for(it=FIRST_map.begin();it!=FIRST_map.end();it++)
 		{
 			cout<<it->first<<":";
@@ -468,7 +469,7 @@ namespace LP1PG
 	{//  closure_instance=CLOSURE（closure_instance）
 		set<LR_item>::iterator it;
 		bool isChanged=false;
-		while(1)
+		while(true)
 		{
 			isChanged=false;
 			for(it=closure_instance.begin();it!=closure_instance.end();it++)
@@ -517,15 +518,19 @@ namespace LP1PG
 	{
 		edi_str.clear();
 		string str;
+		char buffer[10];
+		_itoa(index,buffer,10);
+
+		
 		switch (type)
 		{
 		case shift:
 			str+="s";
-			str+=index;
+			str+=string(buffer);
 			break;
 		case reduction:
 			str+="r";
-			str+=index;
+			str+=string(buffer);
 			break;
 		case accept:
 			str+="acc";
@@ -543,15 +548,22 @@ namespace LP1PG
 
 	action&  LR_analysis_table::at(int index,element elem) 
 	{
-		return  (table[index])[elem];
+		if(table[index].find(elem)==table[index].end())
+			edi_action=action(action_type::error,-1);
+		else
+			edi_action=action((table[index])[elem]);
+		
+		return  edi_action;
 		
 	}
 	void  LR_analysis_table::set_row(int index,const map<element,action>& row)
 	{
 		table[index]=row;
+		this->num_of_lines=table.size();
 	}
 	void  LR_analysis_table::set(int index,element elem,const action& act)
 	{
+
 		//If it exists already
 		if(table[index].find(elem)!=table[index].end())
 		{
@@ -567,6 +579,7 @@ namespace LP1PG
 
 		}
 		(table[index])[elem]=act;
+		this->num_of_lines=table.size();
 	}
 
 
@@ -704,7 +717,7 @@ namespace LP1PG
 		map<string,int>::iterator it; 
 		set<element>::iterator set_it;
 
-		while(1)
+		while(true)
 		{
 			isChanged =false;
 			for(it=var_list.begin();it!=var_list.end();it++)
@@ -752,7 +765,9 @@ namespace LP1PG
 	}
 	void  set_C_construction()
 	{
-
+	
+		
+	   
 		edi_closure.clear();
 		production externed_produc;
 		externed_produc.set_l_part(true,1);//S'
@@ -785,6 +800,8 @@ namespace LP1PG
 		while(1)
 		{
 			isChanged=false;
+			
+
 			for(set_it=set_C.begin();set_it!=set_C.end();set_it++)
 			{
 				for(map_it=var_list.begin();map_it!=var_list.end();map_it++)
@@ -810,8 +827,7 @@ namespace LP1PG
 	
 					//Shift action:
 					LR_table.set(set_it->index,element(true,map_it->second),action(action_type::shift,closure.index));
-				
-				
+				  
 					set<LR_item>::iterator iter;
 					for(iter=closure.closure_instance.begin();iter!=closure.closure_instance.end();iter++)
 					{
@@ -823,14 +839,17 @@ namespace LP1PG
 						{
 						
 							LR_table.set(closure.index,element(false,ter_list.find("#")->second),action(action_type::accept,-1));
+					
 							//Do not need other iterations then.
 							break;
 						}
 					
 						//If it is a reduction item
 						if(item.get_r_element().isNull)
+						{
 							LR_table.set(closure.index,item,action(action_type::reduction,produc_index_map[item]));
 					
+						}
 					
 					}
 
@@ -842,7 +861,7 @@ namespace LP1PG
 					
 
 						set_C.insert(closure);
-					
+					    //cout<<"insert"<<endl;
 						isChanged=true;
 					}
 				}
@@ -869,7 +888,7 @@ namespace LP1PG
 
 					//Shift action:
 					LR_table.set(set_it->index,element(false,map_it->second),action(action_type::shift,closure.index));
-				
+			
 				
 					set<LR_item>::iterator iter;
 					for(iter=closure.closure_instance.begin();iter!=closure.closure_instance.end();iter++)
@@ -878,7 +897,10 @@ namespace LP1PG
 						LR_item item=LR_item(*iter);
 						//If it is a reduction item
 						if(item.get_r_element().isNull)
+						{
 							LR_table.set(closure.index,item,action(action_type::reduction,produc_index_map[item]));
+							
+						}
 					}
 				
 					if(closure.size>0&&set_C.find(closure)==set_C.end())
@@ -886,10 +908,12 @@ namespace LP1PG
 					
 
 						set_C.insert(closure);
+						//cout<<"insert"<<endl;
 						isChanged=true;
 					}
 				}
 			}
+			//cout<<"isChanged:"<<isChanged<<endl;
 			if(isChanged==false)
 				break;
 		}
@@ -898,11 +922,11 @@ namespace LP1PG
 
 	void generate_table()
 	{
-		 load_productions();
-		 init_first_sets(var_list);
+		load_productions();
+		init_first_sets(var_list);
 	
-		 set_C_construction();
-
+		set_C_construction();
+	/*
 		set< LR_item_closure>::iterator it;
 		for(it= set_C.begin();it!=set_C.end();it++)
 		{
@@ -910,10 +934,10 @@ namespace LP1PG
 			closure.print();
 			cout<<endl<<endl;
 		}
-	
-		system("pause");
-
+	*/
+		
+		
+		
 	}
 
 }
-

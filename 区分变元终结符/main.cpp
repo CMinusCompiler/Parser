@@ -3,5 +3,6 @@
 
 void main()
 {
-	LP1PG::generate_table();
+	LR1PG::generate_table();
+	system("pause");
 }

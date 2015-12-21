@@ -13,7 +13,7 @@ using namespace std;
 #define EPSILON "ε"
 
 
-namespace LP1PG
+namespace LR1PG
 {
 	class element
 	{
@@ -80,7 +80,7 @@ namespace LP1PG
 	};
 	class FIRST
 	{
-	private:
+	public:
 		map<string,int> FIRST_map;
 		vector<set<element> > FIRST_sets;
 		int i_pointer;
@@ -149,7 +149,7 @@ namespace LP1PG
 	
 
 	};
-	//LR_item closure for LR(1)
+	//LR_item closure for LR(LEFT)
 	class LR_item_closure
 	{
 	private:
@@ -227,9 +227,14 @@ namespace LP1PG
 		action& at(int index,element elem);
 		void set_row(int index,const map<element,action>& row);
 		void set(int index,element elem,const action& act);
-
-	private:
+		int num_of_lines;
+		LR_analysis_table()
+		{
+			num_of_lines=0;
+		}
+	private:	
 		map<int,map<element,action>> table;
+		
 		//static vector<map<element,action>> table;
 	};
 	
@@ -243,10 +248,10 @@ namespace LP1PG
 	void init_first_sets(map<string,int>& var_list);
 	
 
-	extern map<string,int> var_list;//变元表
-	extern map<string,int> ter_list;//终结符表
-	extern map<int,string> re_var_list;//变元表
-	extern map<int,string> re_ter_list;//终结符表
+	extern map<string,int> var_list;//±???±í
+	extern map<string,int> ter_list;//???á·?±í
+	extern map<int,string> re_var_list;//±???±í
+	extern map<int,string> re_ter_list;//???á·?±í
 	extern map<string,int>::iterator it;
 	extern string edi_str;
 	extern element edi_elem;
@@ -256,7 +261,7 @@ namespace LP1PG
 	extern LR_item_closure edi_closure;
 	extern action edi_action;
 	extern LR_analysis_table LR_table;
-	extern vector<production> produc_set;//产生式集合
+	extern vector<production> produc_set;//?ú?ú??????
 	extern map<production,int> produc_index_map;
 	extern set<LR_item_closure> set_C;
 
