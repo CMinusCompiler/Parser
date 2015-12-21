@@ -15,6 +15,7 @@ namespace LR1PG
 	vector<production> produc_set;//产生式集合
 	map<production,int> produc_index_map;
 	set<LR_item_closure> set_C;
+	
 
 
 	bool  element::operator<(const element& elem)const
@@ -416,8 +417,6 @@ namespace LR1PG
 	}
 	bool  LR_item_closure::operator<(const LR_item_closure& closure)const
 	{
-		
-		
 		if(this->size!=closure.size)
 			return this->size<closure.size;
 		
@@ -430,7 +429,6 @@ namespace LR1PG
 			
 		}
 		return false;
-		
 	}
 	void  LR_item_closure::closure_completion()
 	{//  closure_instance=CLOSURE（closure_instance）
@@ -901,7 +899,7 @@ namespace LR1PG
 		set< LR_item_closure>::iterator it;
 		for(it= set_C.begin();it!=set_C.end();it++)
 		{
-			 LR_item_closure closure= LR_item_closure(*it);
+			LR_item_closure closure= LR_item_closure(*it);
 			closure.print();
 			cout<<endl<<endl;
 		}

@@ -232,6 +232,11 @@ namespace LR1PG
 		{
 			num_of_lines=0;
 		}
+		LR_analysis_table(const LR_analysis_table& LR_table)
+		{
+			this->table=LR_table.table;
+			this->num_of_lines=LR_table.num_of_lines;
+		}
 	private:	
 		map<int,map<element,action>> table;
 		
