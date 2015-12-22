@@ -43,7 +43,8 @@ private:
 public:
 	void static load_productions(const string& file_name)
 	{
-		LR1PG::load_productions(file_name);
+		if(LR1PG::produc_set.empty())
+			LR1PG::load_productions(file_name);
 
 		{
 			var_list=LR1PG::var_list;
