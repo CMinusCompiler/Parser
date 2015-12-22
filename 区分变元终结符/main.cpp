@@ -1,20 +1,7 @@
 #include "LR1PG.h"
 #include <stack>
 
-/*
-map<string,int> var_list;//变元表
-	map<string,int> ter_list;//终结符表
-	map<int,string> re_var_list;//变元表
-	map<int,string> re_ter_list;//终结符表
-	
 
-	
-	FIRST first_sets;
-	LR_analysis_table LR_table;
-	vector<production> produc_set;//产生式集合
-	map<production,int> produc_index_map;
-	set<LR_item_closure> set_C;
-*/
 class LR_analyser
 {
 private:
@@ -54,13 +41,15 @@ private:
 	}
 
 public:
-	void static load(const map<string,int>& v_list,const map<string,int>& t_list,
-		const vector<LR1PG::production> produc_set,const set<LR1PG::LR_item_closure>& C,const LR1PG::LR_analysis_table& table)
+	void static load_productions(const string& file_name)
 	{
-		{
-			var_list=v_list;
-			ter_list=t_list;
+		LR1PG::load_productions(file_name);
 
+		{
+			var_list=LR1PG::var_list;
+			ter_list=LR1PG::ter_list;
+
+			//init element_set
 			map<string,int>::iterator it;
 			for(it=LR1PG::var_list.begin();it!=LR1PG::var_list.end();it++)
 				element_set.insert(LR1PG::element(true,it->second));
@@ -68,19 +57,79 @@ public:
 				element_set.insert(LR1PG::element(true,it->second));
 		}
 
-		production_set=produc_set;
-		LR_table=table;
-		
+		production_set=LR1PG::produc_set;
+	}
+	void static load_table(const string& file_name)
+	{
+		FILE* fp;
+		fp=fopen(file_name.c_str(),"r");
+		if(!fp)
 		{
-			set<LR1PG::LR_item_closure>::iterator it;
-			for(it=C.begin();it!=C.end();it++)
-				S[it->index]=*it;
+			cout<<"Cannot open "<<file_name<<"."<<endl;
+			return;
+		}
+		char buf[10000];
+		
+		while(true)
+		{
+			int index;
+			int n=fscanf(fp,"%d",&index);
+			if(n<=0)
+				break;
+
+			fgetc(fp);
+
+			fgets(buf,10000,fp);
+			if(!buf)
+				return;
+			string str(buf);
+			size_t line_feed_pos=str.find("\n");
+			str.erase(line_feed_pos);
+
+			size_t blank_pos=str.find(" ");
+			string elem_str=str.substr(0,blank_pos);
+			string act_str=str.substr(blank_pos+1);
+
+			LR1PG::element elem;
+			if(ter_list.find(elem_str)!=ter_list.end())
+			{
+			//!isVar
+				elem=LR1PG::element(false,ter_list[elem_str]);
+
+			}
+			else if(var_list.find(elem_str)!=var_list.end())
+			{
+			//isVar
+				elem=LR1PG::element(true,var_list[elem_str]);
+			}
+			else
+			{
+				cout<<"Error: file form does not match."<<endl;
+				return;
+			}
+			LR1PG::action act;
+			switch (act_str[0])
+			{
+			case 's':
+				act=LR1PG::action(LR1PG::action_type::shift,atoi(act_str.substr(1).c_str()));
+				break;
+			case 'r':
+				act=LR1PG::action(LR1PG::action_type::reduction,atoi(act_str.substr(1).c_str()));
+				break;
+			case 'a':
+				act=LR1PG::action(LR1PG::action_type::accept,-1);
+				break;
+			case 'e':
+				act=LR1PG::action(LR1PG::action_type::error,-1);
+				break;
+			}
+			LR_table.set(index,elem,act);
 		}
 
-
-
+		
+		
+		fclose(fp);	
 	}
-	
 	void static analyse(const list<LR1PG::element>& elem_stream)
 	{
 		list<LR1PG::element>::const_iterator ptr=elem_stream.begin();
@@ -117,7 +166,7 @@ public:
 				break;
 		}
 	}
-
+	
 
 };
 map<string,int> LR_analyser::var_list;
@@ -133,9 +182,10 @@ void main()
 	
 
 	LR1PG::generate_table();
-
-
-	LR_analyser::load(LR1PG::var_list,LR1PG::ter_list,LR1PG::produc_set,LR1PG::set_C,LR1PG::LR_table);
+	LR1PG::LR_table.save("TABLE");
+	LR_analyser::load_productions("test2.txt");
+	LR_analyser::load_table("TABLE");
+	//LR_analyser::load(LR1PG::var_list,LR1PG::ter_list,LR1PG::produc_set,LR1PG::set_C,LR1PG::LR_table);
 	
 
 	system("pause");

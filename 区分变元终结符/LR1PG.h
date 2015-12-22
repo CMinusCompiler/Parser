@@ -7,9 +7,11 @@
 #include<set>
 #include<list>
 #include<queue>
+#include<cstdio>
+
 using namespace std;
-#define FILENAME "test2.txt"
-#define MAXROW 100
+
+
 #define EPSILON "¦Å"
 
 
@@ -237,6 +239,8 @@ namespace LR1PG
 			this->table=LR_table.table;
 			this->num_of_lines=LR_table.num_of_lines;
 		}
+		void save(const string& file_name);
+
 	private:	
 		map<int,map<element,action>> table;
 		
@@ -245,7 +249,7 @@ namespace LR1PG
 	
 	LR_item_closure GO(const LR_item_closure& I,element X);
 	void set_C_construction();
-	void load_productions();
+	void load_productions(const string& file_name);
 	void generate_table();
 	void split(std::string& s, std::string& delim,std::vector< std::string >* ret);
 	void init_first_sets(map<string,int>& var_list);

@@ -547,7 +547,26 @@ namespace LR1PG
 		(table[index])[elem]=act;
 		this->num_of_lines=table.size();
 	}
+	void  LR_analysis_table::save(const string& file_name)
+	{
+		FILE* fp;
+		fp=fopen(file_name.c_str(),"w");
+		if(!fp)
+		{
+			cout<<"Cannot write to "<<file_name<<"."<<endl;
+			return;
+		}
+		//fprintf(fp,"%d %d\n",table.size(),table[0].size());
 
+		for(int i=0;i<table.size();i++)
+		{
+			map<element,action>::const_iterator it;
+			for(it=table[i].begin();it!=table[i].end();it++)
+				fprintf(fp,"%d %s %s\n",i,it->first.toString().c_str(),it->second.toString().c_str());
+		}
+		
+		fclose(fp);
+	}
 
 	LR_item_closure  GO(const LR_item_closure& I,element X)
 	 {
@@ -569,7 +588,7 @@ namespace LR1PG
 		 closure.closure_completion();
 		 return closure;
 	 }
-	void  load_productions()
+	void  load_productions(const string& file_name)
 	{
 		string var;//变元
 		int i=1;
@@ -579,17 +598,17 @@ namespace LR1PG
 		string ter_var;//产生式右边的串
 		vector<string> var_ter_vec;//产生式右部的划分
 	
-		char cstr[MAXROW];
+		char cstr[10000];
 		int pos;
 		FILE *f;
-		if((f=fopen(FILENAME,"r"))==NULL)
+		if((f=fopen(file_name.c_str(),"r"))==NULL)
 		{
 			cout<<"open error"<<endl;
 			exit(0);
 		}
 		while(!feof(f))
 		{
-		fgets(cstr,MAXROW,f);
+		fgets(cstr,10000,f);
 		str=cstr;
 		pos=str.find('→');
 		if(i==1)
@@ -611,7 +630,7 @@ namespace LR1PG
 		}
 		fclose(f);
 
-		if((f=fopen(FILENAME,"r"))==NULL)
+		if((f=fopen(file_name.c_str(),"r"))==NULL)
 		{
 			cout<<"open error"<<endl;
 			exit(0);
@@ -619,7 +638,7 @@ namespace LR1PG
 		i=1;
 		while(!feof(f))
 		{
-			fgets(cstr,MAXROW,f);
+			fgets(cstr,10000,f);
 			str=cstr;
 			if(str[str.length()-1]=='\n')
 				str.resize(str.size()-1);
@@ -891,7 +910,7 @@ namespace LR1PG
 
 	void generate_table()
 	{
-		load_productions();
+		load_productions(string("test2.txt"));
 		init_first_sets(var_list);
 	
 		set_C_construction();
