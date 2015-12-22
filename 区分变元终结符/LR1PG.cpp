@@ -295,6 +295,10 @@ namespace LR1PG
 	}
 	element  flex_production::get_r_element()
 	{
+		//If it is X->. epsilon, return a null element
+		if((production::r_part[0].toString())==string(EPSILON))
+			return element();
+		
 		//If the dot is at the rightest side, return a null element.
 		if(ptr_pos==production::r_part_size-1)
 		{
@@ -349,7 +353,9 @@ namespace LR1PG
 	{
 		LR_item item=LR_item(*this);
 
-		
+		//if it is X->. epsilon, stop the dot from moving
+		if((production::r_part[0].toString())==string(EPSILON))
+			return item;
 
 		if(ptr_pos==production::r_part_size-1)
 			return item;
@@ -457,7 +463,11 @@ namespace LR1PG
 								set<element>  first_beita_a=first_sets.find(beta_a);
 								set<element>::iterator first_it;
 								for(first_it=first_beita_a.begin();first_it!=first_beita_a.end();first_it++)//first(beta_a)
+								{
+								//when it is X->epsilon, it needs to be specially dealed with.
+
 									isChanged|=insert(LR_item(-1,produc_set[i],false,first_it->index));
+								}
 							}
 						}
 					}
