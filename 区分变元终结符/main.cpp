@@ -26,7 +26,7 @@ private:
 	static set<LR1PG::element> element_set;
 	static vector<LR1PG::production> production_set;
 	static LR1PG::LR_analysis_table LR_table;
-	static map<int,LR1PG::LR_item_closure> S;
+	//static map<int,LR1PG::LR_item_closure> S;
 	
 	static stack<stack_block> LR_stack;
 	static void shift(int state_index,const LR1PG::element& elem)
@@ -174,16 +174,16 @@ map<string,int> LR_analyser::ter_list;
 set<LR1PG::element> LR_analyser::element_set;
 vector<LR1PG::production> LR_analyser::production_set;
 LR1PG::LR_analysis_table LR_analyser::LR_table;
-map<int,LR1PG::LR_item_closure> LR_analyser::S;
+//map<int,LR1PG::LR_item_closure> LR_analyser::S;
 stack<LR_analyser::stack_block> LR_analyser::LR_stack;
 
 void main()
 {
 	
-
+	LR1PG::load_productions(string("wenfa.txt"));
 	LR1PG::generate_table();
 	LR1PG::LR_table.save("TABLE");
-	LR_analyser::load_productions("test2.txt");
+	LR_analyser::load_productions("wenfa.txt");
 	LR_analyser::load_table("TABLE");
 	//LR_analyser::load(LR1PG::var_list,LR1PG::ter_list,LR1PG::produc_set,LR1PG::set_C,LR1PG::LR_table);
 	

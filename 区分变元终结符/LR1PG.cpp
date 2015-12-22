@@ -727,7 +727,9 @@ namespace LR1PG
 											isChanged|=first_sets.insert(it->first,*set_it);
 									if(ter_list.find(EPSILON)!=ter_list.end())
 									{
-										if(first_sets.find(produc_set[i].r_part[k].toString()).find(element(false,ter_list.find(EPSILON)->second))!=(first_sets.find(produc_set[i].r_part[k].toString())).end())
+										set<element> elem_set=first_sets.find(produc_set[i].r_part[k].toString());
+										//set<element>::iterator elem_it=elem_set.find(element(false,ter_list.find(EPSILON)->second));
+										if(elem_set.find(element(false,ter_list.find(EPSILON)->second))!=elem_set.end())
 										{//Èç¹ûfirst(Yk)ÓÐ¿Õ
 											if(k==produc_set[i].r_part.size()-1)
 											{									
@@ -910,7 +912,7 @@ namespace LR1PG
 
 	void generate_table()
 	{
-		load_productions(string("test2.txt"));
+		//load_productions(string("wenfa.txt"));
 		init_first_sets(var_list);
 	
 		set_C_construction();
@@ -922,10 +924,6 @@ namespace LR1PG
 			closure.print();
 			cout<<endl<<endl;
 		}
-	
-		
-		
-		
 	}
 
 }
