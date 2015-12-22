@@ -261,15 +261,7 @@ namespace LR1PG
 	extern map<string,int> ter_list;//???¨¢¡¤?¡À¨ª
 	extern map<int,string> re_var_list;//¡À???¡À¨ª
 	extern map<int,string> re_ter_list;//???¨¢¡¤?¡À¨ª
-	extern map<string,int>::iterator it;
-	
-	extern element 
-		;
-	
-	
 	extern FIRST first_sets;
-	
-	
 	extern LR_analysis_table LR_table;
 	extern vector<production> produc_set;//?¨²?¨²??????
 	extern map<production,int> produc_index_map;
