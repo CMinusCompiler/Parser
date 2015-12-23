@@ -168,10 +168,8 @@ namespace LR1PG
 		set<element>::iterator it;
 		vector<production>::iterator pro_it;
 		bool epsilon=false;
-		bool exist=false;
 		for(int i=0;i<beta_a.size();i++)
 		{
-			exist=false;
 			if(ter_list.find(beta_a[i])==ter_list.end())//beta_a[i]是变元
 			{		
 				for(it=first_sets.find(beta_a[i]).begin();it!=first_sets.find(beta_a[i]).end();it++)
@@ -180,11 +178,10 @@ namespace LR1PG
 						for(int j=0;j<first.size();j++)
 							if(first[j].compare(it->toString())==0)
 							{//已存在，不需加入
-								exist=true;
-								break;
+								continue;
 							}
-						if(!exist)
-						   first.push_back(it->toString());//将beta_a[i]的first集加入,不加入空,不重复加入
+							else
+						       first.push_back(it->toString());//将beta_a[i]的first集加入,不加入空,不重复加入
 					}
 				for(pro_it=produc_set.begin();pro_it<produc_set.end();pro_it++)
 				{//遍历产生式集合，看beta_a[i]是否能产生空
@@ -203,12 +200,13 @@ namespace LR1PG
 				for(int j=0;j<first.size();j++)
 					if(first[j].compare(beta_a[i])==0)
 					{//已存在，不需加入
-						exist=true;
 						break;
 					}
-				if(!exist)
-					first.push_back(beta_a[i]);
-				break;
+					else
+					{
+						first.push_back(beta_a[i]);
+						break;
+					}
 			}
 		}
 		return first;
@@ -220,10 +218,8 @@ namespace LR1PG
 		set<element>::iterator it;
 		vector<production>::iterator pro_it;
 		bool epsilon=false;
-		bool exist=false;
 		for(int i=0;i<beta_a.size();i++)
 		{
-			exist=false;
 			if(ter_list.find(beta_a[i].toString())==ter_list.end())//beta_a[i]是变元
 			{		
 
@@ -236,10 +232,9 @@ namespace LR1PG
 					
 						if(first.find(element(false,ter_list.find(it->toString())->second))!=first.end())
 						{//已存在，不需加入
-							exist=true;
-							break;
+							continue;
 						}
-						if(!exist)
+						else
 							first.insert(element(false,ter_list.find(it->toString())->second));//将beta_a[i]的first集加入,不加入空,不重复加入
 					}
 				for(pro_it=produc_set.begin();pro_it<produc_set.end();pro_it++)
@@ -258,16 +253,19 @@ namespace LR1PG
 			{
 				if(first.find(element(false,beta_a[i].index))!=first.end())
 				{//已存在，不需加入
-					exist=true;
+					
 					break;
 				}
-				if(!exist)
+				else
+				{
 					first.insert(element(false,beta_a[i].index));
-				break;
+				    break;
+				}
 			}
 		}
 		return first;
 	}
+
 	void  FIRST::print()
 	{
 		set<element>::iterator set_it;
