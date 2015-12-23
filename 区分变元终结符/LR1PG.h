@@ -82,7 +82,7 @@ namespace LR1PG
 	};
 	class FIRST
 	{
-	public:
+	private:
 		map<string,int> FIRST_map;
 		vector<set<element> > FIRST_sets;
 		int i_pointer;
@@ -95,9 +95,11 @@ namespace LR1PG
 		//Return: successful or not
 		bool insert(const string& x,const element& elem);
 		set<element> find(string x);
+		set<element> find(const element& x);
+
 		//$$
-		vector<string> find(vector<string>& beta_a);
-		set<element> find(vector<element>& beta_a);
+		
+		set<element> find(const vector<element>& beta_a);
 		//$$
 		void print();
 	};

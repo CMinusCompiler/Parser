@@ -94,40 +94,37 @@ namespace LR1PG
 	
 	//Return: successful or not
 	bool  FIRST::insert(const string& x,const element& elem)
+	{
+		bool result=0;
+
+		//Judge whether x exists in var_list or ter_list.
+		if(var_list.find(x)==var_list.end()&&ter_list.find(x)==ter_list.end())
+			return 0;
+
+		map<string,int>::iterator it;
+
+		//FISRT(x) has not been established.
+		if(FIRST_map.find(x)==FIRST_map.end())
 		{
-			bool result=0;
-
-			//Judge whether x exists in var_list or ter_list.
-			if(var_list.find(x)==var_list.end()&&ter_list.find(x)==ter_list.end())
-				return 0;
-
-			map<string,int>::iterator it;
-
-			//FISRT(x) has not been established.
-			if(FIRST_map.find(x)==FIRST_map.end())
-			{
-				FIRST_map.insert(pair<string,int>(x,i_pointer));
-				//Establish a FIRST set with nothing.
-				FIRST_sets.push_back(set<element>());
-				i_pointer++;
-			}
-
-
-			it=FIRST_map.find(x);
-			//Judge whether elem exists in FISRT(x).
-			if(FIRST_sets[it->second].find(elem)!=FIRST_sets[it->second].end())
-				result=0;
-			else
-			{
-				FIRST_sets[it->second].insert(elem);
-				result=1;
-			}
-			return result;
-
+			FIRST_map.insert(pair<string,int>(x,i_pointer));
+			//Establish a FIRST set with nothing.
+			FIRST_sets.push_back(set<element>());
+			i_pointer++;
 		}
 
 
+		it=FIRST_map.find(x);
+		//Judge whether elem exists in FISRT(x).
+		if(FIRST_sets[it->second].find(elem)!=FIRST_sets[it->second].end())
+			result=0;
+		else
+		{
+			FIRST_sets[it->second].insert(elem);
+			result=1;
+		}
+		return result;
 
+	}
 	set<element>  FIRST::find(string x)
 	{
 		set<element> elem_set;
@@ -161,109 +158,49 @@ namespace LR1PG
 		}
 
 	}
-	vector<string>  FIRST::find(vector<string>& beta_a)
-	   { //求first(beita a),其中beita=（V|T）*，a属于T
-		//返回first集，vector中string均属于T
-		vector<string> first;
-		set<element>::iterator it;
-		vector<production>::iterator pro_it;
-		bool epsilon=false;
-		for(int i=0;i<beta_a.size();i++)
-		{
-			if(ter_list.find(beta_a[i])==ter_list.end())//beta_a[i]是变元
-			{		
-				for(it=first_sets.find(beta_a[i]).begin();it!=first_sets.find(beta_a[i]).end();it++)
-					if(it->toString().compare(EPSILON)!=0)
-					{
-						for(int j=0;j<first.size();j++)
-							if(first[j].compare(it->toString())==0)
-							{//已存在，不需加入
-								continue;
-							}
-							else
-						       first.push_back(it->toString());//将beta_a[i]的first集加入,不加入空,不重复加入
-					}
-				for(pro_it=produc_set.begin();pro_it<produc_set.end();pro_it++)
-				{//遍历产生式集合，看beta_a[i]是否能产生空
-					if(pro_it->l_part.toString().compare(beta_a[i])==0)//找到beta_a[i]的产生式
-					   if(pro_it->isWithEPSILON)
-					   {
-						   epsilon=true;
-						   break;
-					   }
-				}
-				if(!epsilon)//beta_a[i]不含空产生式
-					break;
-			}
-			else//beta_a[i]是终结符，加入first集，注意#也是终结符
-			{
-				for(int j=0;j<first.size();j++)
-					if(first[j].compare(beta_a[i])==0)
-					{//已存在，不需加入
-						break;
-					}
-					else
-					{
-						first.push_back(beta_a[i]);
-						break;
-					}
-			}
-		}
-		return first;
-		}
-	set< element>  FIRST::find(vector<element>& beta_a)
-	{ //求first(beita a),其中beita=（V|T）*，a属于T
-	//返回first集
-		set<element> first;
-		set<element>::iterator it;
-		vector<production>::iterator pro_it;
-		bool epsilon=false;
-		for(int i=0;i<beta_a.size();i++)
-		{
-			if(ter_list.find(beta_a[i].toString())==ter_list.end())//beta_a[i]是变元
-			{		
 
-				set<element> elem_set=first_sets.find(beta_a[i].toString());
-				it=elem_set.begin();
+	set<element>  FIRST::find(const element& x)
+	{
+		return find(x.toString());
+	}
+	
+	set<element>  FIRST::find(const vector<element>& beta_a)
+	{
+		set<element> result;
+		queue<element> que;
+		if(beta_a.empty())
+			return result;
+		que.push(beta_a[0]);
+		int ptr=0;
+		while(true)
+		{
+			if(que.empty())
+				break;
 
-				for(;it!=elem_set.end();it++)
-					if(it->toString().compare(EPSILON)!=0)
-					{
-					
-						if(first.find(element(false,ter_list.find(it->toString())->second))!=first.end())
-						{//已存在，不需加入
-							continue;
-						}
-						else
-							first.insert(element(false,ter_list.find(it->toString())->second));//将beta_a[i]的first集加入,不加入空,不重复加入
-					}
-				for(pro_it=produc_set.begin();pro_it<produc_set.end();pro_it++)
-				{//遍历产生式集合，看beta_a[i]是否能产生空
-					if(pro_it->l_part.toString().compare(beta_a[i].toString())==0)//找到beta_a[i]的产生式
-						if(pro_it->isWithEPSILON)
-						{
-							epsilon=true;
-							break;
-						}
-				}
-				if(!epsilon)//beta_a[i]不含空产生式
-					break;
-			}
-			else//beta_a[i]是终结符，加入first集，注意#也是终结符
+			set<element> f_set=find(que.front());
+			que.pop();
+
+			if(f_set.find(element(false,ter_list[string(EPSILON)]))!=f_set.end())
 			{
-				if(first.find(element(false,beta_a[i].index))!=first.end())
-				{//已存在，不需加入
-					
-					break;
-				}
-				else
-				{
-					first.insert(element(false,beta_a[i].index));
-				    break;
-				}
+			//if with EPSILON
+				set<element>::iterator it;
+				for(it=f_set.begin();it!=f_set.end();it++)
+					if((it->toString())!=string(EPSILON))
+						result.insert(*it);
+
+				que.push(beta_a[ptr+1]);
+				ptr++;
 			}
+			else
+			{
+				set<element>::iterator it;
+				for(it=f_set.begin();it!=f_set.end();it++)
+						result.insert(*it);
+			}
+		
 		}
-		return first;
+		return result;
+	
 	}
 
 	void  FIRST::print()
