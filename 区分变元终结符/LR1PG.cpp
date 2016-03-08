@@ -14,7 +14,7 @@ namespace LR1PG
 	LR_analysis_table LR_table;
 	vector<production> produc_set;//产生式集合
 	map<production,int> produc_index_map;
-	set<LR_item_closure> set_C;
+	//set<LR_item_closure> set_C;
 	
 
 
@@ -358,7 +358,7 @@ namespace LR1PG
 	}
 	bool  LR_item_closure::operator<(const LR_item_closure& closure)const
 	{
-		if(this->size!=closure.size)
+		/*if(this->size!=closure.size)
 			return this->size<closure.size;
 		
 		set<LR_item>::iterator it=this->closure_instance.begin();
@@ -369,19 +369,40 @@ namespace LR1PG
 				return (*it)<(*(closure.closure_instance.begin()));
 			
 		}
-		return false;
+		return false;*/
+		string str1;
+		string str2;
+		set<LR_item>::iterator it;
+		for(it=this->closure_instance.begin();it!=closure_instance.end();it++)
+			str1+=it->toString();
+		for(it=closure.closure_instance.begin();it!=closure.closure_instance.end();it++)
+			str2+=it->toString();
+		return str1<str2;
+
+
 	}
 	void  LR_item_closure::closure_completion()
 	{//  closure_instance=CLOSURE（closure_instance）
-		set<LR_item>::iterator it;
+		
+		
+		set<LR_item>::iterator item_it;
 		bool isChanged=false;
+		
+
+		queue<LR_item> que;
+		for(item_it=closure_instance.begin();item_it!=closure_instance.end();item_it++)
+			que.push(*item_it);
+
 		while(true)
 		{
-			isChanged=false;
-			for(it=closure_instance.begin();it!=closure_instance.end();it++)
-			{
-				LR_item not_const_it=LR_item(*it);
-				element B=not_const_it.get_r_element();
+			if(que.empty())
+				break;
+
+			LR_item item=que.front();
+			que.pop();
+
+			
+				element B=item.get_r_element();
 				//element B=it->get_r_element();
 				if(!B.isNull)//the dot isn't at the rightest
 				{		
@@ -392,24 +413,24 @@ namespace LR1PG
 							if(produc_set[i].l_part.index==B.index&&produc_set[i].l_part.isVar==B.isVar)//it->get_r_element() production ;B->……
 							{
 								vector<element> beta_a;
-								for(int j=it->ptr_pos+2;j<it->r_part_size;j++)//A->a.Bbeita,a, put beita to vector<element> beta_a
-									beta_a.push_back(element(it->r_part[j].isVar,it->r_part[j].index));
-								beta_a.push_back(element(false,it->index));//A->a.Bbeita,a, put a to vector<element> beta_a
+								for(int j=item.ptr_pos+2;j<item.r_part_size;j++)//A->a.Bbeita,a, put beita to vector<element> beta_a
+									beta_a.push_back(element(item.r_part[j].isVar,item.r_part[j].index));
+								beta_a.push_back(element(false,item.index));//A->a.Bbeita,a, put a to vector<element> beta_a
 								set<element>  first_beita_a=first_sets.find(beta_a);
 								set<element>::iterator first_it;
 								for(first_it=first_beita_a.begin();first_it!=first_beita_a.end();first_it++)//first(beta_a)
 								{
-								//when it is X->epsilon, it needs to be specially dealed with.
-
-									isChanged|=insert(LR_item(-1,produc_set[i],false,first_it->index));
+									LR_item n_item=LR_item(-1,produc_set[i],false,first_it->index);
+									bool isNew=insert(n_item);
+									isChanged|=isNew;
+									if(isNew)
+										que.push(n_item);
 								}
 							}
 						}
 					}
 				}
-			}
-			if(isChanged==false)//until not change
-				break;
+
 		}		
 	}
 	void  LR_item_closure::print()
@@ -513,7 +534,216 @@ namespace LR1PG
 		fclose(fp);
 	}
 
-	LR_item_closure  GO(const LR_item_closure& I,element X)
+
+	set<LR_item_closure> C::instance;
+	map<element,map<LR_item_closure,LR_item_closure> > C::GO_buf;
+	
+	LR_item_closure C::GO(const LR_item_closure& I,element X)
+	{
+		map<LR_item_closure,LR_item_closure>::iterator closure_it=GO_buf[X].find(I);
+		if(closure_it!=GO_buf[X].end())
+			return closure_it->second;
+
+		LR_item_closure closure;
+		set<LR_item> ::iterator it;
+		for(it=I.closure_instance.begin();it!=I.closure_instance.end();it++)
+		{
+			LR_item item=LR_item(*it);
+			if(!item.get_r_element().isNull)
+				if(item.get_r_element().index==X.index&&item.get_r_element().isVar==X.isVar)
+				{
+					LR_item temp=item.ptr_r_shift();
+					closure.insert(temp);
+				}
+		        
+		}
+		closure.closure_completion();
+
+		(GO_buf[X])[I]=closure;
+		return closure;
+	}
+	void C::construction()
+	{
+		queue<LR_item_closure> que;
+		
+		LR_item_closure closure;
+		production externed_produc;
+		externed_produc.set_l_part(true,1);//S'
+		externed_produc.insert_elem(element(true,2));//S
+		closure.insert(LR_item(-1,externed_produc,false,ter_list.find("#")->second));//[S'->.S,#]
+		closure.closure_completion();//CLOSURE([S'->.S,#])
+
+		
+
+
+		//set the index of the closure
+		closure.index=LR_item_closure::get_index_generator();
+		LR_item_closure::incre();
+
+		que.push(closure);
+
+		set<LR_item>::iterator iter;
+		for(iter=closure.closure_instance.begin();iter!=closure.closure_instance.end();iter++)
+		{
+			//Reduction action:
+			LR_item item=LR_item(*iter);
+			//If it is a reduction item
+			if(item.get_r_element().isNull)
+				LR_table.set(closure.index,item,action(action_type::reduction,produc_index_map[item]));
+		}
+
+
+
+	
+
+		instance.insert(que.front());
+		map<string,int>::iterator map_it;
+		
+		bool isChanged=false;
+		while(true)
+		{
+			if(que.empty())
+				break;
+
+			isChanged=false;
+			
+			LR_item_closure f_closure=que.front();
+			que.pop();
+
+			for(map_it=var_list.begin();map_it!=var_list.end();map_it++)
+			{
+				LR_item_closure closure= GO(f_closure,element(true,map_it->second));
+				//If it is going to be inserted
+
+				
+				if(closure.size>0&&instance.find(closure)==instance.end())
+				{
+					//set the index of the closure
+					closure.index=LR_item_closure::get_index_generator();
+					LR_item_closure::incre();
+				}
+				else if(closure.size>0)
+				{
+					closure.index=instance.find(closure)->index;		
+				}
+				else
+					continue;
+				//If it is a empty closure, continue.
+
+	
+				//Shift action:
+				LR_table.set(f_closure.index,element(true,map_it->second),action(action_type::shift,closure.index));
+				  
+				set<LR_item>::iterator iter;
+				for(iter=closure.closure_instance.begin();iter!=closure.closure_instance.end();iter++)
+				{
+					//Reduction action:
+					LR_item item=LR_item(*iter);
+					
+					//Accept action:
+					if(item==LR_item(0,externed_produc,false,ter_list.find("#")->second))
+					{
+						
+						LR_table.set(closure.index,element(false,ter_list.find("#")->second),action(action_type::accept,-1));
+					
+						//Do not need other iterations then.
+						break;
+					}
+					
+					//If it is a reduction item
+					if(item.get_r_element().isNull)
+					{
+						LR_table.set(closure.index,item,action(action_type::reduction,produc_index_map[item]));
+					
+					}
+					
+				}
+
+				
+				
+
+				if(closure.size>0&&instance.find(closure)==instance.end())
+				{
+					
+
+					instance.insert(closure);
+					
+					que.push(closure);
+
+					cout<<"insert I"<<closure.index<<endl;
+					isChanged=true;
+				}
+			}
+			for(map_it=ter_list.begin();map_it!=ter_list.end();map_it++)
+			{
+
+				
+
+				LR_item_closure closure= GO(f_closure,element(false,map_it->second));
+
+				//If it is going to be inserted
+				if(closure.size>0&&instance.find(closure)==instance.end())
+				{
+					//set the index of the closure
+					closure.index=LR_item_closure::get_index_generator();
+					LR_item_closure::incre();
+				}
+				else if(closure.size>0)
+				{
+					closure.index=instance.find(closure)->index;		
+				}
+				else
+					continue;
+
+				//Shift action:
+				LR_table.set(f_closure.index,element(false,map_it->second),action(action_type::shift,closure.index));
+			
+				
+				set<LR_item>::iterator iter;
+				for(iter=closure.closure_instance.begin();iter!=closure.closure_instance.end();iter++)
+				{
+					//Reduction action:
+					LR_item item=LR_item(*iter);
+					//If it is a reduction item
+					if(item.get_r_element().isNull)
+					{
+						LR_table.set(closure.index,item,action(action_type::reduction,produc_index_map[item]));
+							
+					}
+				}
+				
+				if(closure.size>0&&instance.find(closure)==instance.end())
+				{
+					
+
+					instance.insert(closure);
+
+					que.push(closure);
+
+					cout<<"insert I"<<closure.index<<endl;
+					isChanged=true;
+				}
+			}
+
+
+			cout<<"isChanged:"<<isChanged<<endl;
+			//if(isChanged==false)
+				//break;
+		}
+	}
+	void C::print()
+	{
+		set< LR_item_closure>::iterator it;
+		for(it= instance.begin();it!=instance.end();it++)
+		{
+			LR_item_closure closure= LR_item_closure(*it);
+			closure.print();
+			cout<<endl<<endl;
+		}
+	
+	}
+
+	/*LR_item_closure  GO(const LR_item_closure& I,element X)
 	 {
 
 		 LR_item_closure closure;
@@ -532,7 +762,7 @@ namespace LR1PG
 		 }
 		 closure.closure_completion();
 		 return closure;
-	 }
+	 }*/
 	void  load_productions(const string& file_name)
 	{
 		string var;//变元
@@ -643,7 +873,7 @@ namespace LR1PG
 			ret->push_back(s.substr(last,index-last));  
 		}  
 	}  
-	void  init_first_sets(map<string,int>& var_list)
+	void  FIRST::init_FIRST_sets(map<string,int>& var_list)
 	{//求所有变元的first集
 		bool isChanged=false;
 		map<string,int>::iterator it; 
@@ -697,7 +927,7 @@ namespace LR1PG
 		}
 
 	}
-	void  set_C_construction()
+	/*void  set_C_construction()
 	{
 	
 		LR_item_closure closure;
@@ -852,23 +1082,18 @@ namespace LR1PG
 			if(isChanged==false)
 				break;
 		}
-	}
+	}*/
 
 
 	void generate_table()
 	{
 		//load_productions(string("wenfa.txt"));
-		init_first_sets(var_list);
+		FIRST::init_FIRST_sets(var_list);
 	
-		set_C_construction();
-	
-		set< LR_item_closure>::iterator it;
-		for(it= set_C.begin();it!=set_C.end();it++)
-		{
-			LR_item_closure closure= LR_item_closure(*it);
-			closure.print();
-			cout<<endl<<endl;
-		}
+		//set_C_construction();
+		C::construction();
+		C::print();
+		
 	}
 
 }

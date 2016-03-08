@@ -181,9 +181,9 @@ stack<LR_analyser::stack_block> LR_analyser::LR_stack;
 void main()
 {
 	
-	LR1PG::load_productions(string("testForEpsilon.txt"));
+	LR1PG::load_productions(string("wenfa(1).txt"));
 	LR1PG::generate_table();
-	LR1PG::LR_table.save("TABLE");
+	LR1PG::LR_table.save("TABLE_if");
 
 
 

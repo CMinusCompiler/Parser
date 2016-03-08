@@ -86,21 +86,19 @@ namespace LR1PG
 		map<string,int> FIRST_map;
 		vector<set<element> > FIRST_sets;
 		int i_pointer;
+		//Return: successful or not
+		bool insert(const string& x,const element& elem);
 	public:
 		FIRST()
 		{
 			i_pointer=0;
 		}
    
-		//Return: successful or not
-		bool insert(const string& x,const element& elem);
+		static void init_FIRST_sets(map<string,int>& var_list);
 		set<element> find(string x);
 		set<element> find(const element& x);
-
-		//$$
-		
 		set<element> find(const vector<element>& beta_a);
-		//$$
+		
 		void print();
 	};
 	class flex_production:public production
@@ -249,14 +247,26 @@ namespace LR1PG
 		//static vector<map<element,action>> table;
 	};
 	
-	LR_item_closure GO(const LR_item_closure& I,element X);
-	void set_C_construction();
+	class C
+	{
+	private:
+		static set<LR_item_closure> instance;
+		static map<element,map<LR_item_closure,LR_item_closure> > GO_buf;
+		LR_item_closure static GO(const LR_item_closure& I,element X);
+	public:
+		void static construction();
+		void static print();
+
+	};
+
+
+	//LR_item_closure GO(const LR_item_closure& I,element X);
+	//void set_C_construction();
 	void load_productions(const string& file_name);
 	void generate_table();
 	void split(std::string& s, std::string& delim,std::vector< std::string >* ret);
-	void init_first_sets(map<string,int>& var_list);
-	void split(std::string& s, std::string& delim,std::vector< std::string >* ret);
-	void init_first_sets(map<string,int>& var_list);
+	
+	
 	
 
 	extern map<string,int> var_list;//¡À???¡À¨ª
@@ -267,7 +277,7 @@ namespace LR1PG
 	extern LR_analysis_table LR_table;
 	extern vector<production> produc_set;//?¨²?¨²??????
 	extern map<production,int> produc_index_map;
-	extern set<LR_item_closure> set_C;
+	//extern set<LR_item_closure> set_C;
 
 
 
